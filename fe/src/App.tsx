@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { auth, googleProvider } from '../firebase';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async (): Promise<void> => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Lỗi đăng nhập:", error);
+    }
+  };
+
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Lỗi đăng xuất:", error);
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ padding: '20px' }}>
+      {user ? (
+        <div>
+          {/* 3. TS sẽ hiểu user lúc này không còn là null nhờ check bên trên */}
+          <h2>Chào, {user.displayName}!</h2>
+          {user.photoURL && (
+            <img 
+              src={user.photoURL} 
+              alt="avatar" 
+              style={{ borderRadius: '50%', width: '50px' }}
+            />
+          )}
+          <p>Email: {user.email}</p>
+          <button onClick={handleLogout}>Đăng xuất</button>
+        </div>
+      ) : (
+        <button onClick={handleLogin}>Đăng nhập bằng Google</button>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
