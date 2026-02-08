@@ -1,34 +1,40 @@
-const {getAllPosts , getAllPostsOfUser, createNewPostOfUser, deleteMyPost} = require('../services/post.service')
-const {hash_password} = require('../auth/password');
-const {generateAccesssToken, generateRefreshToken} = require('../middlewares/cookiesJwtAuth');
-const { insertRefreshToken } = require('../services/token.service');
-const jwt = require("jsonwebtoken");
-const { json } = require('express');
+const {getAllPosts , getPostById, createNewPostOfUser, deletePost, updatePost} = require('../services/post.service')
+
+
 class PostController{
 	// [GET]
     async getAllPosts(req, res, next){
         const data = await getAllPosts();
         res.json(data);
     }
+
 	// [GET]
-    async getAllPostsOfUser(req, res, next){
+    async getPostById(req, res, next){
         const id = req.params.id;
-        const data = await getAllPostsOfUser(id);
+        const data = await getPostById(id);
         res.json(data);
     }
+
+
 	// [POST]
-	async postMyPost(){
+	async postMyPost(req, res, next){
 		const postData = req.body; // get post data from body
-        
+        const data = await createNewPostOfUser(postData);
+		res.json(data);
         
 	}
 	// [DELETE]
-	async removeMyPost(){
-		const postId = req.query.id; // post id
-		const result = await deleteMyPost(id);
-		res.json({})
-        
-        
+	async deletePost(req, res, next){
+		const postId = req.params.id; // post id
+		const result = await deletePost(postId);
+		res.json(result);
+	}
+	//[PUT] update post
+	async updatePost(req, res, next){
+		const postId = req.params.id;
+		const postData = req.body;
+		const data = await updatePost(postId, postData);
+		res.json(data);
 	}
  
 }

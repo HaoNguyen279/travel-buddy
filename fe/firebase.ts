@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider,
     signInWithEmailAndPassword,
@@ -5,8 +6,6 @@ import { getAuth, GoogleAuthProvider,
     signOut,
     onAuthStateChanged
 } from "firebase/auth";
-
-
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,

@@ -28,7 +28,7 @@ app.use('/api/users', userRouter);
 
 app.use('/api/places', placeRouter);
 
-app.use('/api/posts', postRouter);
+app.use('/posts', postRouter);
 
 app.use('/auth', authRouter);
 
