@@ -1,40 +1,69 @@
-const {getAllPosts , getPostById, createNewPostOfUser, deletePost, updatePost} = require('../services/post.service')
+const {getAllPosts , getPostById, createNewPostOfUser, deletePost, updatePost, getPostsLimit} = require('../services/post.service')
 
 
 class PostController{
 	// [GET]
-    async getAllPosts(req, res, next){
-        const data = await getAllPosts();
-        res.json(data);
+    async getPosts(req, res, next){
+        try {
+			const limit = req.query.limit;
+			if(limit) {
+				const data = await getPostsLimit(limit);
+				return res.status(200).json(data);
+			}
+			const data = await getAllPosts();
+        	res.status(200).json(data);
+		} catch (error) {
+			res.status(500).json({message: "Internal server error:" + error});
+		}
     }
 
 	// [GET]
     async getPostById(req, res, next){
-        const id = req.params.id;
-        const data = await getPostById(id);
-        res.json(data);
+        try {
+			const id = req.params.id;
+			if(!id) return res.status(400).json({message: "Post ID is required"});
+			const data = await getPostById(id);
+			if(!data) return res.status(404).json({message: "Post not found"});
+			res.status(200).json(data);
+		} catch (error) {
+			res.status(500).json({message: "Internal server error:" + error});
+		}
     }
 
 
 	// [POST]
-	async postMyPost(req, res, next){
-		const postData = req.body; // get post data from body
-        const data = await createNewPostOfUser(postData);
-		res.json(data);
-        
+	async uploadPost(req, res, next){
+		try {
+			const postData = req.body; // get post data from body
+			if(!postData) return res.status(400).json({message: "Post data is required"});
+			const data = await createNewPostOfUser(postData);
+			res.status(200).json(data);
+		} catch (error) {
+			res.status(500).json({message: "Internal server error:" + error});
+		}
 	}
 	// [DELETE]
 	async deletePost(req, res, next){
-		const postId = req.params.id; // post id
-		const result = await deletePost(postId);
-		res.json(result);
+		try {
+			const postId = req.params.id; // post id
+			if(!postId) return res.status(400).json({message: "Post ID is required"});
+			const result = await deletePost(postId);
+			res.status(200).json(result);
+		} catch (error) {
+			res.status(500).json({message: "Internal server error:" + error});
+		}
 	}
 	//[PUT] update post
 	async updatePost(req, res, next){
-		const postId = req.params.id;
-		const postData = req.body;
-		const data = await updatePost(postId, postData);
-		res.json(data);
+		try {
+			const postId = req.params.id;
+			if(!postId) return res.status(400).json({message: "Post ID is required"});
+			const postData = req.body;
+			const data = await updatePost(postId, postData);
+			res.status(200).json(data);
+		} catch (error) {
+			res.status(500).json({message: "Internal server error:" + error});
+		}
 	}
  
 }

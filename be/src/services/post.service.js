@@ -10,6 +10,10 @@ async function getPostById(post_id){
     const result = await db.query("SELECT * FROM Posts WHERE post_id = $1", [post_id]);
     return result.rows[0];
 }
+async function getPostsLimit(limit){
+    const result = await db.query("SELECT * FROM Posts LIMIT $1", [limit]);
+    return result.rows;
+}
 
 async function createNewPostOfUser(postData){
     const {user_id, place_id, content, image_url, created_at} = postData;
@@ -35,5 +39,6 @@ module.exports = {
     createNewPostOfUser,
     deletePost,
     updatePost,
-    getPostById
-}
+    getPostById,
+    getPostsLimit
+} 
