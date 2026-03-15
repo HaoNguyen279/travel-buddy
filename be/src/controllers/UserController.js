@@ -1,10 +1,24 @@
-const {getAllUsers, getUserById, createNewUser, verifyLoginUser} = require('../services/user.service')
+const {getAllUsers, getUserById, createNewUser, verifyLoginUser, deleteUserById, updateUser} = require('../services/user.service')
 const {hash_password} = require('../auth/password');
 const {generateAccesssToken, generateRefreshToken} = require('../middlewares/cookiesJwtAuth');
 const { insertRefreshToken } = require('../services/token.service');
 const jwt = require("jsonwebtoken");
 const { json } = require('express');
+
 class UserController{
+
+    async getMe(req, res, next){
+        try {
+            const {uid} =  req.user;
+            if(!uid) return res.status(400).json({message: "User ID is required"});
+            const data = await getUserById(uid);
+            if(!data) return res.status(404).json({message: "User not found"});
+            res.status(200).json(data);
+        } catch (error) {
+            res.status(500).json({message: "Internal server error:" + error}); 
+        }
+    }
+
     async getAllUsers(req, res, next){
         const data = await getAllUsers();
         res.json(data);
@@ -14,6 +28,18 @@ class UserController{
         const data = await getUserById(id);
         res.json(data);
     }
+    async deleteUserById(req, res, next){
+        const id = req.params.id;
+        const result = await deleteUserById(id);
+        res.json(result);
+    }
+    async updateUser(req, res, next){
+        const userdata = req.body;
+        const result = await updateUser(userdata);
+        res.status(200).json(result);
+
+    }
+
 
     async register(req, res, next){
         const ud = req.body;

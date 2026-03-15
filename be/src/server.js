@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 });
 
 // Use router
-app.use('/api/users', userRouter);
+app.use('/users', userRouter);
 
 app.use('/places', placeRouter);
 

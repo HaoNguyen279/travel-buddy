@@ -1,5 +1,5 @@
 const {sql, poolPromise} = require('../config/db');
-const db = require('../config/postgre')
+const db = require('../config/postgre');
 const crypto = require("crypto");
 
 async function getAllPosts(){
