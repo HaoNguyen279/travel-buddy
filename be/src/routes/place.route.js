@@ -1,12 +1,15 @@
 const express = require('express');
-
 const router = express.Router();
 const PlaceController = require('../controllers/PlaceController');
-const GemmaController = require('../controllers/GemmaController');
-const { authenticateAccessToken } = require('../middlewares/authenticate');
 
-router.get('/getAllPlaces', PlaceController.getAllPlaces);
+router.post('/', PlaceController.createPlace);
 
-router.get('/getTop10Places', GemmaController.getResult);
+router.delete('/:id', PlaceController.deletePlace);
+
+router.put('/:id', PlaceController.updatePlace);
+
+router.get('/:id', PlaceController.getPlaceById);
+
+router.get('/', PlaceController.getPlaces);
 
 module.exports = router;

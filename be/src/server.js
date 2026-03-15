@@ -14,7 +14,7 @@ app.use(cors({
 }));
 
 // lấy db từ file config pool connection 
-const db = require('../src/config/postgre')
+const db = require('../src/config/postgre');
 app.use(express.json()); // parse JSON khi get data từ BODY của POST request
 
 app.use(cookieParser());
@@ -24,11 +24,11 @@ app.use((req, res, next) => {
 });
 
 // Use router
-app.use('/api/users', userRouter);
+app.use('/users', userRouter);
 
-app.use('/api/places', placeRouter);
+app.use('/places', placeRouter);
 
-app.use('/api/posts', postRouter);
+app.use('/posts', postRouter);
 
 app.use('/auth', authRouter);
 
