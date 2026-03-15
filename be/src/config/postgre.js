@@ -12,11 +12,11 @@ const pool = new Pool({
 const testConnection = async () => {
     try {
         const client = await pool.connect();
-        console.log("PostgreSQL connected successfully ! 💀💀💀");
+        console.log("PostgreSQL connected successfully !");
         client.release();
         return true;
     } catch (error) {
-        console.error('❌ Kết nối PostgreSQL thất bại:', err.message);
+        console.error('Failed to connect to PostgreSQL:', error.message);
         return false;
     }
 }

@@ -5,10 +5,69 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  user_id        String      @id @default(uuid()) @db.Uuid()
+  username       String   @unique
+  email     String   @unique
+  password_hash  String
+  full_name     String?
+  avatar_url    String?
+  bio           String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Place {
+  place_id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  address    String
+  city       String
+  country    String
+  category   String
+  image_url String?
+  average_rating Float @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  post_id String @id @default(uuid()) @db.Uuid()
+  user_id String @db.Uuid()
+  place_id Int
+  content String
+  image_url String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Comment {
+  comment_id Int @id @default(autoincrement())
+  post_id String @db.Uuid()
+  user_id String @db.Uuid()
+  comment_text String
+  created_at DateTime @default(now())
+}
+
+model Rating {
+  rating_id Int @id @default(autoincrement())
+  user_id String @db.Uuid()
+  place_id Int
+  score Int @default(0)
+  review String
+  created_at DateTime @default(now())
+}
+
+model Favorite {
+  user_id String @db.Uuid()
+  place_id Int
+  saved_at DateTime @default(now())
+  @@id([user_id, place_id])
 }

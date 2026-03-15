@@ -1,37 +1,83 @@
 const {sql, poolPromise} = require('../config/db');
 const db = require('../config/postgre')
+const { prisma } =  require("../../lib/prisma");
 
 async function getAllPosts(){
-    const result = await db.query("SELECT * FROM Posts");
-    return result.rows;
-
+    try {
+        const result = prisma.post.findMany();
+        return result;
+    } catch (error) {
+        throw new Error("Error fetching posts: " + error.message);
+    }
 }
 async function getPostById(post_id){
-    const result = await db.query("SELECT * FROM Posts WHERE post_id = $1", [post_id]);
-    return result.rows[0];
+    try {
+        const result = await prisma.post.findUnique({
+            where: {
+                post_id: post_id
+            }
+        });
+    return result;
+    } catch (error) {
+        throw new Error("Error fetching post: " + error.message);
+    }
 }
 async function getPostsLimit(limit){
-    const result = await db.query("SELECT * FROM Posts LIMIT $1", [limit]);
-    return result.rows;
+    try {
+        const result = await prisma.post.findMany({
+            take: limit
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error fetching posts with limit: " + error.message);
+    }
 }
 
 async function createNewPostOfUser(postData){
-    const {user_id, place_id, content, image_url, created_at} = postData;
-    const result = await db.query("INSERT INTO Posts (user_id, place_id, content, image_url, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *", 
-    [user_id, place_id, content, image_url, created_at]);
-    return result.rows[0];
+    try {
+        const {user_id, place_id, content, image_url, created_at} = postData;
+        const result = await prisma.post.create({
+            data: {
+                user_id,
+                place_id,
+                content,
+                image_url,
+                created_at
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error creating new post: " + error.message);
+    }
 }
 
 async function deletePost(postId){
-    console.log("Deleting post with ID:", postId);
-    const result = await db.query("DELETE FROM Posts WHERE post_id = $1 RETURNING *", [postId]);
-
-    return result.rows[0];
+    try {
+        const result = await prisma.post.delete({
+            where:{
+                post_id: postId
+            }
+        })
+        return result;
+    } catch (error) {
+        throw new Error("Error deleting post: "+ error.message)
+    }
 }
-async function updatePost(post_id, {place_id, content, image_url, update_at}) {
-    console.log("Updating post with ID:", post_id);
-    const result = await db.query("UPDATE Posts set place_id = $1, content = $2, image_url = $3, update_at = $4 where post_id = $5", [place_id,content, image_url, update_at, post_id]);
-    return result.rows[0];
+async function updatePost(post_id, {place_id, content, image_url}) {
+    try {
+        const result = await prisma.post.update({
+            where: {
+                post_id : post_id
+            },
+            data:{
+                place_id : place_id,
+                content: content,
+                image_url : image_url,
+            }
+        })
+    } catch (error) {
+        throw new Error("Error updating post: "+ error.message)
+    }
 }
 
 module.exports = {
