@@ -11,11 +11,11 @@ const pool = new Pool({
 const testConnection = async () => {
   try {
     const client = await pool.connect();
-    console.log("PostgreSQL (Supabase) connected successfully 🚀");
+    console.log("PostgreSQL (Supabase) connected successfully");
     client.release();
     return true;
   } catch (error) {
-    console.error('❌ Kết nối PostgreSQL thất bại:', error.message);
+    console.error('Kết nối PostgreSQL thất bại:', error.message);
     return false;
   }
 };

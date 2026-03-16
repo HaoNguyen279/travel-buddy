@@ -24,7 +24,8 @@ CREATE TABLE users (
   full_name VARCHAR(100),
   avatar_url VARCHAR(255),
   bio TEXT,
-  created_at timestamp(6) DEFAULT CURRENT_TIMESTAMP
+  created_at timestamp(6) DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp(6) DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE refreshtokens (
@@ -58,7 +59,8 @@ CREATE TABLE places (
   category VARCHAR(50),
   image_url VARCHAR(255),
   average_rating DECIMAL(3, 2) DEFAULT 0,
-  created_at timestamp DEFAULT current_timestamp
+  created_at timestamp DEFAULT current_timestamp,
+  updated_at timestamp DEFAULT current_timestamp
 );
 
 CREATE TABLE posts (

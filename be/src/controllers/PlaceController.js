@@ -1,7 +1,7 @@
 const { getAllPlaces, getPlaceById, getPlacesLimit, createNewPlace, updatePlace, deletePlace } = require('../services/place.service')
 
 class PlaceController {
-    // [GET] /places - /places?limit=number
+    // [GET] /place - /place?limit=number
     async getPlaces(req, res, next) {
         try {
             const limit = req.query.limit;
@@ -15,7 +15,7 @@ class PlaceController {
             res.status(500).json({message: "Internal server error:" + error});
         }
     }
-    // [GET] /places/:id
+    // [GET] /place/:id
     async getPlaceById(req, res, next){
         try {
             const place_id = req.params.id;
@@ -26,9 +26,8 @@ class PlaceController {
         } catch (error) {
             res.status(500).json({message: "Internal server error:" + error});
         }
-        
     }
-    // [POST] /places
+    // [POST] /place
     async createPlace(req, res, next){
         try {
             const placeData = req.body;
@@ -39,7 +38,7 @@ class PlaceController {
             res.status(500).json({message: "Internal server error:" + error});
         }
     }
-    // [PUT] /places/:id
+    // [PUT] /place/:id
     async updatePlace(req, res, next){
         try {
             const data = req.body;
@@ -52,7 +51,7 @@ class PlaceController {
             res.status(500).json({message: "Internal server error: " + error});
         }
     }
-    // [DELETE] /places/:id
+    // [DELETE] /place/:id
     async deletePlace(req, res, next){
         try {
             const place_id = req.params.id;
