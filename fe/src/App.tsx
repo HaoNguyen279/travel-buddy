@@ -3,12 +3,7 @@ import './App.css';
 const App= () => {
   return (
     <div>
-      <h1>Welcome to the App!</h1>
-
-      <footer>
-        <p>© 2024 My App. All rights reserved.</p>
-
-      </footer>
+      Test run
     </div>
   );
 
