@@ -24,11 +24,11 @@ app.use((req, res, next) => {
 });
 
 // Use router
-app.use('/users', userRouter);
+app.use('/user', userRouter);
 
-app.use('/places', placeRouter);
+app.use('/place', placeRouter);
 
-app.use('/posts', postRouter);
+app.use('/post', postRouter);
 
 app.use('/auth', authRouter);
 

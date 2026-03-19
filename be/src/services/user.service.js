@@ -2,50 +2,114 @@ const e = require('express');
 const {sql, poolPromise} = require('../config/db');
 const db = require('../config/postgre');
 const { verify_password } = require('../auth/password');
-
+const { prisma } =  require("../../lib/prisma");
 async function getAllUsers() {
     // const pool = await poolPromise;
     // const result = await pool.request()
     //     .query('SELECT * FROM Users')
     // return result.recordset;
-    const result = await db.query("SELECT * FROM Users");
-    return result.rows;
+    // const result = await db.query("SELECT * FROM Users");
+    // return result.rows;
+    try {
+        const result = await prisma.user.findMany();
+        return result;
+    } catch (error) {
+        throw new Error("Error fetching users: " + error.message);
+    }
 }
 
 async function getUserById(id) {
     // const pool = await poolPromise;
     // const result = await pool.request()
     //     .query("SELECT * FROM Users WHERE user_id = ?", [id])
-    const result = await db.query("SELECT * FROM Users WHERE user_id = $1", [id]);
-    return result.rows;
+    try {
+        const result = await prisma.user.findUnique({
+            where: {
+                user_id: id
+            }        
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error fetching user: " + error.message);
+    }
 }
 
 async function deleteUserById(id) {
-    const result = await db.query("DELETE FROM Users WHERE user_id = $1", [id]);
-    return result.rowCount > 0;
+    try {
+        const result = await prisma.user.delete({
+            where: {
+                user_id: id
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error deleting user: " + error.message);
+    }
 }
 async function updateUser(userdata) {
-    const result = await db.query("UPDATE Users SET username = $1, email = $2, password_hash = $3, full_name = $4, avatar_url = $5, bio = $6 WHERE user_id = $7", [userdata.username, userdata.email, userdata.password_hash, userdata.full_name, userdata.avatar_url, userdata.bio, userdata.user_id]);
-    return result.rowCount > 0;
+    try {
+        const result = await prisma.user.update({
+            where: {
+                user_id: userdata.user_id
+            },
+            data: {
+                username: userdata.username,
+                email: userdata.email,
+                password_hash: userdata.password_hash,
+                full_name: userdata.full_name,
+                avatar_url: userdata.avatar_url,
+                bio: userdata.bio
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error updating user: " + error.message);
+    }
 }
 
 const createNewUser = async (username, email, hashed_password, full_name, avatar_url, bio) =>{
-    const result = await db.query('INSERT INTO Users(username, email, password_hash, full_name, avatar_url, bio) VALUES ($1,$2,$3,$4,$5,$6)',[username, email,hashed_password, full_name ,avatar_url, bio]);
-    if(result) return true;
-    return false;
+    try {
+        const result = await prisma.user.create({
+            data: {
+                username,
+                email,
+                password_hash: hashed_password,
+                full_name,
+                avatar_url,
+                bio
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error creating new user: " + error.message);
+    }
 }
+
 
 const verifyLoginUser = async (email, text_password) =>{
-    const user_hashed_password = await db.query("SELECT password_hash from Users WHERE email = $1", [email]);
-    const isCorrectPassword = await verify_password(text_password, user_hashed_password.rows[0].password_hash);
-    if(isCorrectPassword) return (await db.query("SELECT * from Users WHERE email = $1", [email])).rows[0];
-    return false;
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+        if (!user) return false;
 
+        const isCorrectPassword = await verify_password(text_password, user.password_hash);
+        if (isCorrectPassword) {
+            delete user.password_hash;
+            return user;
+        }
+        return false;
+    } catch (error) {
+        throw new Error("Error verifying user login: " + error.message);
+    }
 }
+
 
 
 
 
 module.exports = {
-    getAllUsers, getUserById, createNewUser, verifyLoginUser, deleteUserById   
+    getAllUsers, getUserById, createNewUser, verifyLoginUser, deleteUserById, updateUser
 }

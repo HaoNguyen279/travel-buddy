@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const { json } = require('express');
 
 class UserController{
-
     async getMe(req, res, next){
         try {
             const {uid} =  req.user;
@@ -103,11 +102,11 @@ class UserController{
         }
     }
     async refresh(req, res, next){
-        console.log("Request to refresh access token 🔄🔄🔄🔄");
+        console.log("Request to refresh access token");
         const refreshToken = req.cookies.refreshToken;
 
         if(!refreshToken){
-            console.log("Ko tìm thấy refresh token trong cookies ❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥");
+            console.log("Ko tìm thấy refresh token trong cookies");
             return res.status(401).json(
                 {
                     message : "Missing refresh token!"
