@@ -22,6 +22,10 @@ model User {
   bio           String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  posts Post[]
+  favorites Favorite[]
+  comments Comment[]
+  ratings Rating[]
 }
 model Place {
   place_id          Int      @id @default(autoincrement())
@@ -35,6 +39,9 @@ model Place {
   average_rating Float @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  posts Post[]
+  ratings Rating[]
+  favorites Favorite[]
 }
 
 model Post {
@@ -45,6 +52,9 @@ model Post {
   image_url String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  author User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
+  comments Comment[]
 }
 
 
@@ -54,6 +64,9 @@ model Comment {
   user_id String @db.Uuid()
   comment_text String
   created_at DateTime @default(now())
+  author User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
 }
 
 model Rating {
@@ -63,6 +76,8 @@ model Rating {
   score Int @default(0)
   review String
   created_at DateTime @default(now())
+  reviewer User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
 }
 
 model Favorite {
@@ -70,4 +85,6 @@ model Favorite {
   place_id Int
   saved_at DateTime @default(now())
   @@id([user_id, place_id])
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
 }
