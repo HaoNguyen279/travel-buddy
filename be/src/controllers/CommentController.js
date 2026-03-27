@@ -12,7 +12,7 @@ class CommentController{
             }
             const data = await getAllComments();
             res.status(200).json(data);
-        } catch (error) {            
+        } catch (error) {
             res.status(500).json({message: "Internal server error:" + error});
         }
     }
