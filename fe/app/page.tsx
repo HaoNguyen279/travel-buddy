@@ -2,6 +2,8 @@ import { ItemCard } from "@/components/ui/ItemCard";
 import { RecommendCard } from "@/components/ui/RecommendCard";
 import { HeroSection } from "@/components/section/HeroSection";
 import { SectionHeading } from "@/components/section/SectionHeading";
+import { Navbar } from "@/components/nav/Navbar";
+import Footer from "@/components/footer/Footer";
 
 const heroStats = [
   { label: "Điểm đến", value: "250+" },
@@ -48,44 +50,108 @@ const destinations = [
       "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=1200&q=80",
     altText: "Đà Nẵng cầu Rồng",
     topicTitle: "Đà Nẵng",
-    subtitle: "Vé máy bay khứ hồi từ 1.590.000đ",
-    priceTag: "3N2Đ từ 2.9 triệu",
   },
   {
     imgUrl:
       "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
     altText: "Đà Lạt rừng thông",
     topicTitle: "Đà Lạt",
-    subtitle: "Thời tiết 18°C, cực hợp du lịch cuối tuần",
-    priceTag: "2N1Đ từ 1.8 triệu",
   },
   {
     imgUrl:
       "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1200&q=80",
     altText: "Hội An về đêm",
     topicTitle: "Hội An",
-    subtitle: "Phố cổ, cafe sân thượng và homestay sát sông",
-    priceTag: "3N2Đ từ 2.5 triệu",
   },
   {
     imgUrl:
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
     altText: "Nha Trang biển xanh",
-    topicTitle: "Nha Trang",
-    subtitle: "Combo biển đảo và tour lặn ngắm san hô",
-    priceTag: "3N2Đ từ 2.7 triệu",
+    topicTitle: "Nha Trang"
   },
 ];
-
+const navProps = {
+  webName : "TravellBuddy",
+  subtitle : "alo",
+  itemOnNav : [
+    {
+      itemName: "Register",
+      linkTo : "/register"
+    },
+    {
+      itemName: "Place",
+      linkTo : "/place"
+    },
+    {
+      itemName: "Aniaga",
+      linkTo : "/Anoga"
+    },
+  ]
+}
+const dataFooter = [
+  {
+    "footerTitle": "Support",
+    "footerItems": [
+      { "itemName": "Manage your trips", "linkTo": "#" },
+      { "itemName": "Contact Customer Service", "linkTo": "#" },
+      { "itemName": "Safety Resource Center", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "Discover",
+    "footerItems": [
+      { "itemName": "Genius loyalty program", "linkTo": "#" },
+      { "itemName": "Seasonal and holiday deals", "linkTo": "#" },
+      { "itemName": "Travel articles", "linkTo": "#" },
+      { "itemName": "Booking.com for Business", "linkTo": "#" },
+      { "itemName": "Traveller Review Awards", "linkTo": "#" },
+      { "itemName": "Car rental", "linkTo": "#" },
+      { "itemName": "Flight finder", "linkTo": "#" },
+      { "itemName": "Restaurant reservations", "linkTo": "#" },
+      { "itemName": "Booking.com for Travel Agents", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "Terms and settings",
+    "footerItems": [
+      { "itemName": "Privacy Notice", "linkTo": "#" },
+      { "itemName": "Terms of Service", "linkTo": "#" },
+      { "itemName": "Accessibility Statement", "linkTo": "#" },
+      { "itemName": "Partner dispute", "linkTo": "#" },
+      { "itemName": "Modern Slavery Statement", "linkTo": "#" },
+      { "itemName": "Human Rights Statement", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "Partners",
+    "footerItems": [
+      { "itemName": "Extranet login", "linkTo": "#" },
+      { "itemName": "Partner help", "linkTo": "#" },
+      { "itemName": "List your property", "linkTo": "#" },
+      { "itemName": "Become an affiliate", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "About",
+    "footerItems": [
+      { "itemName": "About Booking.com", "linkTo": "#" },
+      { "itemName": "How We Work", "linkTo": "#" },
+      { "itemName": "Sustainability", "linkTo": "#" },
+      { "itemName": "Press center", "linkTo": "#" },
+      { "itemName": "Careers", "linkTo": "#" },
+      { "itemName": "Investor relations", "linkTo": "#" },
+      { "itemName": "Corporate contact", "linkTo": "#" },
+      { "itemName": "Content guidelines and reporting", "linkTo": "#" }
+    ]
+  }
+]
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50 py-8 sm:py-12">
+    <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
+      
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
-        <HeroSection
-          title="Lên kế hoạch chuyến đi nhanh hơn, đẹp hơn và vui hơn"
-          subtitle="Travel Buddy giúp bạn tìm điểm đến phù hợp, gom lịch trình vào một nơi, và gợi ý các trải nghiệm thực sự đáng thử theo ngân sách của bạn."
-          stats={heroStats}
-        />
+
+        <Navbar webName={navProps.webName} subtitle={navProps.subtitle} itemOnNav={navProps.itemOnNav} />
 
         <section className="space-y-5">
           <SectionHeading
@@ -121,13 +187,12 @@ export default function Home() {
                 imgUrl={item.imgUrl}
                 altText={item.altText}
                 topicTitle={item.topicTitle}
-                subtitle={item.subtitle}
-                priceTag={item.priceTag}
               />
             ))}
           </div>
         </section>
       </div>
+      <Footer props={dataFooter} />
     </main>
   );
 }
