@@ -1,23 +1,32 @@
 "use client";
 
-
 import Image from "next/image";
+
 type RecommendCardProps = {
-    imgUrl: string;
-    altText: string;
-    topicTitle: string;
+  imgUrl: string;
+  altText: string;
+  topicTitle: string;
+  subtitle?: string;
+  priceTag?: string;
 };
 
-export function RecommendCard({imgUrl, altText, topicTitle}: RecommendCardProps) {
+export function RecommendCard({
+  imgUrl,
+  altText,
+  topicTitle,
+}: RecommendCardProps) {
   return (
-    <div className="relative flex w-full items-center justify-center h-48 transition duration-300 ease-in-out hover:brightness-125">
-        <Image
+    <article className="group relative h-64 w-full overflow-hidden rounded-2xl cursor-pointer">
+      <Image
         src={imgUrl}
         alt={altText}
-        className="w-full h-48 object-cover rounded-md"
+        className="object-cover transition duration-500 group-hover:scale-105 cursor-pointer"
         fill
-    />
-    <h2 className="absolute w-full text-start bottom-0 right-0 text-3xl font-semibold text-white-900 p-4">{topicTitle}</h2>
-    </div>
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 space-y-2 p-4 text-white">
+        <h3 className="text-2xl font-semibold leading-tight">{topicTitle}</h3>
+      </div>
+    </article>
   );
 }
