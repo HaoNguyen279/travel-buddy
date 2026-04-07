@@ -15,19 +15,22 @@ type NavbarProps = {
 export function Navbar({webName, subtitle, itemOnNav} : NavbarProps) {
   return (
     
-    <div className="z-10 py-4 ">
-              <Image
-        src="/img/travelbuddy-logo.svg"
-        alt={"Main-logo"}
-        height={40}
-        width={200}
-        className="h-10 w-auto object-contain"
-        />
-      <nav className="relative z-10 flex items-center justify-between border border-teal-100 bg-black from-cyan-50 via-amber-50 to-emerald-100 p-1">
-        <div className="space-y-1 flex items-center">
+    <div className="z-10 py-4 flex bg-white ">
+      <Link href="/" className="flex items-center gap-2">
+          <Image
+          src="/img/travelbuddy-logo.svg"
+          alt={"Main-logo"}
+          height={30}
+          width={150}
+          className="h-10 w-auto object-contain m-2 px-5"
+          />
+      </Link>
+        
+      <nav className="relative z-10 flex items-center justify-between p-1">
+        <div className="flex items-center">
           {itemOnNav.map((item)=>{
               return(
-                  <Link className="p-2 text-white-700" key={item.itemName} href={item.linkTo}>{item.itemName}</Link>
+                  <Link className="p-2 text-gray-900 hover:text-blue-700 trasition-colors duration-300 ease-in-out" key={item.itemName} href={item.linkTo}>{item.itemName}</Link>
               )
           })}
         </div>

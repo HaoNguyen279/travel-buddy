@@ -1,6 +1,5 @@
 import { ItemCard } from "@/components/ui/ItemCard";
 import { RecommendCard } from "@/components/ui/RecommendCard";
-import { HeroSection } from "@/components/section/HeroSection";
 import { SectionHeading } from "@/components/section/SectionHeading";
 import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
@@ -76,7 +75,7 @@ const navProps = {
   itemOnNav : [
     {
       itemName: "Register",
-      linkTo : "/register"
+      linkTo : "/auth"
     },
     {
       itemName: "Place",
@@ -84,7 +83,7 @@ const navProps = {
     },
     {
       itemName: "Aniaga",
-      linkTo : "/Anoga"
+      linkTo : "/"
     },
   ]
 }
@@ -148,10 +147,10 @@ const dataFooter = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
-      
+      <Navbar webName={navProps.webName} subtitle={navProps.subtitle} itemOnNav={navProps.itemOnNav} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
 
-        <Navbar webName={navProps.webName} subtitle={navProps.subtitle} itemOnNav={navProps.itemOnNav} />
+        
 
         <section className="space-y-5">
           <SectionHeading
