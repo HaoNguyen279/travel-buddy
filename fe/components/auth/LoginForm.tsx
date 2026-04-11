@@ -1,7 +1,19 @@
 "use client";
 
 import Image from "next/image";
+import {auth} from "@/lib/firebase"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { useRouter } from "next/navigation";
 export function LoginForm() {
+    const router = useRouter();
+    const handleLogin = async () =>{
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    if(result.user != null){
+      router.replace("/");
+    }
+    console.log(result.user);
+  }
   return (
     <div>
       <h1 className="text-center text-gray-900 text-2xl font-bold py-4">SIGN IN</h1>
@@ -33,7 +45,8 @@ export function LoginForm() {
         />
       </div>
       <button
-        type="submit"
+        type="button"
+        onClick={handleLogin}
         className="w-full h-11 rounded-xl bg-gray-100 text-gray-900 text-sm font-semibold
                    hover:bg-gray-200 active:scale-[0.99] transition shadow-md flex items-center justify-center"
       >

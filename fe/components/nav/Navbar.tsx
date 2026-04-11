@@ -1,6 +1,16 @@
+"use client"
 import { Playfair_Display } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+
+import { onAuthStateChanged } from "firebase/auth"
+import { auth } from "@/lib/firebase"
+import { useAuth } from "../../app/context/AuthContext";
+import { useEffect } from "react";
+import SignUpButton from "./SignUpButton";
+import LoginButton from "./LoginButton";
+import LogoutButton from "./LogoutButton";
+import Dropdown from "./Dropdown";
 // const playfair = Playfair_Display({
 //   subsets: ["latin"],
 //   weight: ["600", "700", "800"],
@@ -13,6 +23,11 @@ type NavbarProps = {
 };
 
 export function Navbar({webName, subtitle, itemOnNav} : NavbarProps) {
+    const {user, loading} = useAuth();
+    useEffect(()=>{
+      console.log(user);
+    },[user]);
+
   return (
     
     <div className="z-10 py-4 flex bg-white ">
@@ -26,7 +41,7 @@ export function Navbar({webName, subtitle, itemOnNav} : NavbarProps) {
           />
       </Link>
         
-      <nav className="relative z-10 flex items-center justify-between p-1">
+      <nav className="relative z-10 flex items-center justify-between w-full p-1">
         <div className="flex items-center">
           {itemOnNav.map((item)=>{
               return(
@@ -34,6 +49,11 @@ export function Navbar({webName, subtitle, itemOnNav} : NavbarProps) {
               )
           })}
         </div>
+        {user ? <><Dropdown/></> : <><div>
+          <SignUpButton/>
+          <LoginButton/>
+          <Dropdown/>
+        </div></>}
         </nav>
     </div>
   );

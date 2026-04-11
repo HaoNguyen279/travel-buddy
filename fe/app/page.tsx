@@ -4,6 +4,9 @@ import { SectionHeading } from "@/components/section/SectionHeading";
 import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
 
+
+
+
 const heroStats = [
   { label: "Điểm đến", value: "250+" },
   { label: "Lịch trình", value: "8.4K" },

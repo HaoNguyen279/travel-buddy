@@ -1,13 +1,16 @@
 import { AuthContainer } from "@/components/auth/AuthContainer";
-import imgUrl from "../../public/img/travel-background-613yzbmemikozd15.jpg"
 import { Navbar } from "@/components/nav/Navbar";
+import { auth } from "@/lib/firebase"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import { LoginForm } from "@/components/auth/LoginForm";
+
 const navProps = {
   webName : "TravellBuddy",
   subtitle : "alo",
   itemOnNav : [
     {
       itemName: "Register",
-      linkTo : "/auth"
+      linkTo : "/register"
     },
     {
       itemName: "Place",
@@ -19,12 +22,14 @@ const navProps = {
     },
   ]
 }
+
 export default function AuthPage() {
+
   return (
     
 <main
   style={{
-    backgroundImage: `url(${imgUrl.src})`,
+    backgroundImage: `url('/img/travel-background-613yzbmemikozd15.jpg')`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   }}
@@ -37,7 +42,7 @@ export default function AuthPage() {
   />
 
   <div className="flex-1 flex items-center justify-center">
-    <AuthContainer />
+    <AuthContainer children={<LoginForm/>}/>
   </div>
 </main>
   );

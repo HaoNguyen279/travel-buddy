@@ -2,9 +2,11 @@ import { ItemCard } from "@/components/ui/ItemCard";
 import { RecommendCard } from "@/components/ui/RecommendCard";
 import { HeroSection } from "@/components/section/HeroSection";
 import { SectionHeading } from "@/components/section/SectionHeading";
+import { useParams } from "next/navigation";
 
 
 export default function Place() {
+  const searchText = useParams();
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50 py-8 sm:py-12">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
