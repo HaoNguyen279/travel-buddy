@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 type RecommendCardProps = {
   imgUrl: string;
@@ -8,14 +9,17 @@ type RecommendCardProps = {
   topicTitle: string;
   subtitle?: string;
   priceTag?: string;
+  destination?: string;
 };
 
 export function RecommendCard({
   imgUrl,
   altText,
   topicTitle,
+  destination,
 }: RecommendCardProps) {
   return (
+    <Link href={`/place/${destination}`}>
     <article className="group relative h-64 w-full overflow-hidden rounded-2xl cursor-pointer">
       <Image
         src={imgUrl}
@@ -28,5 +32,6 @@ export function RecommendCard({
         <h3 className="text-2xl font-semibold leading-tight">{topicTitle}</h3>
       </div>
     </article>
+    </Link>
   );
 }

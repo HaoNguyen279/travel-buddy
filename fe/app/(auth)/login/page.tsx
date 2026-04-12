@@ -1,7 +1,5 @@
 import { AuthContainer } from "@/components/auth/AuthContainer";
 import { Navbar } from "@/components/nav/Navbar";
-import { auth } from "@/lib/firebase"
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 import { LoginForm } from "@/components/auth/LoginForm";
 
 const navProps = {
@@ -26,7 +24,7 @@ const navProps = {
 export default function AuthPage() {
 
   return (
-    
+              
 <main
   style={{
     backgroundImage: `url('/img/travel-background-613yzbmemikozd15.jpg')`,

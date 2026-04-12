@@ -52,24 +52,28 @@ const destinations = [
       "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=1200&q=80",
     altText: "Đà Nẵng cầu Rồng",
     topicTitle: "Đà Nẵng",
+    destination:"da-nang"
   },
   {
     imgUrl:
       "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
     altText: "Đà Lạt rừng thông",
     topicTitle: "Đà Lạt",
+    destination:"da-lat"
   },
   {
     imgUrl:
       "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1200&q=80",
     altText: "Hội An về đêm",
     topicTitle: "Hội An",
+    destination:"hoi-an"
   },
   {
     imgUrl:
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
     altText: "Nha Trang biển xanh",
-    topicTitle: "Nha Trang"
+    topicTitle: "Nha Trang",
+    destination:"nha-trang"
   },
 ];
 const navProps = {
@@ -78,7 +82,7 @@ const navProps = {
   itemOnNav : [
     {
       itemName: "Register",
-      linkTo : "/auth"
+      linkTo : "/register"
     },
     {
       itemName: "Place",
@@ -189,6 +193,7 @@ export default function Home() {
                 imgUrl={item.imgUrl}
                 altText={item.altText}
                 topicTitle={item.topicTitle}
+                destination={item.destination}
               />
             ))}
           </div>
