@@ -76,85 +76,10 @@ const destinations = [
     destination:"nha-trang"
   },
 ];
-const navProps = {
-  webName : "TravellBuddy",
-  subtitle : "alo",
-  itemOnNav : [
-    {
-      itemName: "Register",
-      linkTo : "/register"
-    },
-    {
-      itemName: "Place",
-      linkTo : "/place"
-    },
-    {
-      itemName: "Aniaga",
-      linkTo : "/"
-    },
-  ]
-}
-const dataFooter = [
-  {
-    "footerTitle": "Support",
-    "footerItems": [
-      { "itemName": "Manage your trips", "linkTo": "#" },
-      { "itemName": "Contact Customer Service", "linkTo": "#" },
-      { "itemName": "Safety Resource Center", "linkTo": "#" }
-    ]
-  },
-  {
-    "footerTitle": "Discover",
-    "footerItems": [
-      { "itemName": "Genius loyalty program", "linkTo": "#" },
-      { "itemName": "Seasonal and holiday deals", "linkTo": "#" },
-      { "itemName": "Travel articles", "linkTo": "#" },
-      { "itemName": "Booking.com for Business", "linkTo": "#" },
-      { "itemName": "Traveller Review Awards", "linkTo": "#" },
-      { "itemName": "Car rental", "linkTo": "#" },
-      { "itemName": "Flight finder", "linkTo": "#" },
-      { "itemName": "Restaurant reservations", "linkTo": "#" },
-      { "itemName": "Booking.com for Travel Agents", "linkTo": "#" }
-    ]
-  },
-  {
-    "footerTitle": "Terms and settings",
-    "footerItems": [
-      { "itemName": "Privacy Notice", "linkTo": "#" },
-      { "itemName": "Terms of Service", "linkTo": "#" },
-      { "itemName": "Accessibility Statement", "linkTo": "#" },
-      { "itemName": "Partner dispute", "linkTo": "#" },
-      { "itemName": "Modern Slavery Statement", "linkTo": "#" },
-      { "itemName": "Human Rights Statement", "linkTo": "#" }
-    ]
-  },
-  {
-    "footerTitle": "Partners",
-    "footerItems": [
-      { "itemName": "Extranet login", "linkTo": "#" },
-      { "itemName": "Partner help", "linkTo": "#" },
-      { "itemName": "List your property", "linkTo": "#" },
-      { "itemName": "Become an affiliate", "linkTo": "#" }
-    ]
-  },
-  {
-    "footerTitle": "About",
-    "footerItems": [
-      { "itemName": "About Booking.com", "linkTo": "#" },
-      { "itemName": "How We Work", "linkTo": "#" },
-      { "itemName": "Sustainability", "linkTo": "#" },
-      { "itemName": "Press center", "linkTo": "#" },
-      { "itemName": "Careers", "linkTo": "#" },
-      { "itemName": "Investor relations", "linkTo": "#" },
-      { "itemName": "Corporate contact", "linkTo": "#" },
-      { "itemName": "Content guidelines and reporting", "linkTo": "#" }
-    ]
-  }
-]
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
-      <Navbar webName={navProps.webName} subtitle={navProps.subtitle} itemOnNav={navProps.itemOnNav} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
 
         
@@ -199,7 +124,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-      <Footer props={dataFooter} />
     </main>
   );
 }

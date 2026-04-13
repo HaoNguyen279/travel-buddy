@@ -2,24 +2,6 @@ import { AuthContainer } from "@/components/auth/AuthContainer";
 import { Navbar } from "@/components/nav/Navbar";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-const navProps = {
-  webName : "TravellBuddy",
-  subtitle : "alo",
-  itemOnNav : [
-    {
-      itemName: "Register",
-      linkTo : "/register"
-    },
-    {
-      itemName: "Place",
-      linkTo : "/place"
-    },
-    {
-      itemName: "Aniaga",
-      linkTo : "/"
-    },
-  ]
-}
 
 export default function AuthPage() {
 
@@ -33,11 +15,6 @@ export default function AuthPage() {
   }}
   className="h-screen overflow-hidden bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-200 flex flex-col"
 >
-  <Navbar
-    webName={navProps.webName}
-    subtitle={navProps.subtitle}
-    itemOnNav={navProps.itemOnNav}
-  />
 
   <div className="flex-1 flex items-center justify-center">
     <AuthContainer children={<LoginForm/>}/>

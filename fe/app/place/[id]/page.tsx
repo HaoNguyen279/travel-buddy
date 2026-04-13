@@ -1,6 +1,7 @@
 
 "use client"
 
+import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import { SectionHeading } from "@/components/section/SectionHeading";
 import React, { useEffect, useState } from "react";
@@ -22,25 +23,6 @@ type PlaceProps = {
     average_rating: Number
     createdAt: string
     updatedAt: string
-}
-
-const navProps = {
-  webName : "TravellBuddy",
-  subtitle : "alo",
-  itemOnNav : [
-    {
-      itemName: "Register",
-      linkTo : "/register"
-    },
-    {
-      itemName: "Place",
-      linkTo : "/place"
-    },
-    {
-      itemName: "Aniaga",
-      linkTo : "/"
-    },
-  ]
 }
 
 const PlaceComponent = ({place} : {place: PlaceProps}) => {
@@ -103,8 +85,7 @@ export default function Place({params} : Props) {
   },[]);
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
-      <Navbar webName={navProps.webName} subtitle={navProps.subtitle} itemOnNav={navProps.itemOnNav} />
-      <div className="mx-auto flex w-[80%] max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-[80%] max-w-6xl flex-col gap-10 pb-10 px-4 sm:px-6 lg:px-8">
 
         <section className="space-y-5">
           <h1 className="text-red-900">Destination id: {id}</h1>
