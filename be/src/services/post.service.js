@@ -4,7 +4,17 @@ const { prisma } =  require("../../lib/prisma");
 
 async function getAllPosts(){
     try {
-        const result = prisma.post.findMany();
+        const result = prisma.post.findMany({
+            include: {
+                author : {
+                    select: {
+                        username: true,
+                        full_name: true,
+                        avatar_url: true
+                    }
+                }
+            }
+        });
         return result;
     } catch (error) {
         throw new Error("Error fetching posts: " + error.message);
