@@ -34,6 +34,7 @@ model Place {
   address    String
   city       String
   country    String
+  destination_id String?
   category   String
   image_url String?
   average_rating Float @default(0)

@@ -14,6 +14,15 @@ async function getAllPlaces() {
     return data;
 }
 
+async function getPlacesByDestination(destination) {
+    const data = await prisma.place.findMany({
+        where:{
+            destination_id: destination
+        }
+    });
+    return data;
+}
+
 async function getPlaceById(place_id){
     try {
         const id = parseInt(place_id);
@@ -98,5 +107,6 @@ module.exports = {
     getPlacesLimit,
     createNewPlace,
     updatePlace,
-    deletePlace
+    deletePlace,
+    getPlacesByDestination
 }
