@@ -3,8 +3,6 @@ import { Playfair_Display } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
 
-import { onAuthStateChanged } from "firebase/auth"
-import { auth } from "@/lib/firebase"
 import { useAuth } from "../../app/context/AuthContext";
 import { useEffect } from "react";
 import SignUpButton from "./SignUpButton";
