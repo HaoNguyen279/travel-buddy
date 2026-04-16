@@ -1,98 +1,203 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import { getPosts } from "@/services/postService";
+import { PostCard } from "@/components/ui/Post/PostCard";
 
+export default function PostPage() {
+  const [posts, setPosts] = useState<any[]>([]);
 
-type User ={
-    username: string,
-    full_name: string,
-    avatar_url: string
-}
-export type PostProps = {
-  post_id: string;         
-  user_id: string;        
-  place_id: number;      
-  content: string;
-  image_url?: string | null; 
-  createdAt: Date;           
-  updatedAt: Date;
-  
-  author: User;             
-
-};
-const Article = (post :  PostProps) =>{
-    const {user_id, place_id, content, author} = post;
-    const [timeAgo, setTimeAgo] = useState("");
-    const calcTimeAgo = (dateString: string) => {
-        const now = new Date();
-        const date = new Date(dateString);
-        const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-        if(seconds < 60)
-            return seconds.toString() + " giây trước";
-        else if(seconds < 3600)
-            return (seconds/60).toFixed(0) + " phút trước";
-        else if(seconds < 86400)
-            return (seconds/3600).toFixed(0) + " giờ trước";
-        else
-            return (seconds/86400).toFixed(0) + " ngày trước";
+  useEffect(() => {
+    async function fetchData() {
+      const data = await getPosts();
+      setPosts(data || []);
     }
-    // setTimeAgo(calcTimeAgo(post.createdAt.toString()));
-    // AI gen tailwind+html temp, tí map lại bằng data sau
-    return  <article className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="p-4 sm:p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src={author.avatar_url}
-                    alt={author.full_name}
-                    width={11}
-                    height={11}
-                    className="rounded-full h-11 w-11 object-cover"
-                  />
+    fetchData();
+  }, []);
+
+  return (
+    <div className="min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 bg-gray-50">
+      {/* Header */}
+      <header className="py-6 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-sky-700">
+            Social<span className="text-violet-600">Feed</span>
+          </h1>
+          <div className="flex items-center space-x-4">
+            <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+              <i className="fas fa-bell" />
+            </button>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-sky-500 to-violet-500" />
+          </div>
+        </div>
+      </header>
+
+      <div className="flex flex-col md:flex-row gap-6 py-6">
+        {/* Sidebar */}
+        <aside className="w-full md:w-64 flex-shrink-0">
+          <div className="bg-white rounded-lg shadow p-4 sticky top-6">
+            <div className="space-y-4">
+              <button className="w-full flex items-center space-x-3 p-3 rounded-lg bg-sky-50 text-sky-700 font-medium">
+                <i className="fas fa-home" />
+                <span>Home</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+                <i className="fas fa-compass" />
+                <span>Explore</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+                <i className="fas fa-bookmark" />
+                <span>Bookmarks</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+                <i className="fas fa-users" />
+                <span>Communities</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+                <i className="fas fa-cog" />
+                <span>Settings</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1">
+          {/* Create Post */}
+          <div className="bg-white rounded-lg shadow mb-6 p-4">
+            <div className="flex items-start space-x-3">
+              <img
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80"
+                alt="User"
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div className="flex-1">
+                <textarea
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                  rows={2}
+                  placeholder="What's on your mind?"
+                />
+                <div className="flex justify-between items-center mt-3">
+                  <div className="flex space-x-3">
+                    <button className="p-2 text-gray-500 hover:text-sky-600 rounded-full hover:bg-sky-50">
+                      <i className="fas fa-image" />
+                    </button>
+                    <button className="p-2 text-gray-500 hover:text-sky-600 rounded-full hover:bg-sky-50">
+                      <i className="fas fa-video" />
+                    </button>
+                    <button className="p-2 text-gray-500 hover:text-sky-600 rounded-full hover:bg-sky-50">
+                      <i className="fas fa-link" />
+                    </button>
+                  </div>
+                  <button className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 font-medium">
+                    Post
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Feed: nếu có data API thì render từ posts, không thì fallback demo */}
+          <div className="space-y-6">
+            {posts.length > 0 ? (
+              posts.map((item) => <PostCard key={item.post_id} post={item} />)
+            ) : (
+              <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                No posts yet.
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Right Sidebar */}
+        <aside className="w-full md:w-80 flex-shrink-0 hidden lg:block">
+          <div className="space-y-6 sticky top-6">
+            {/* Stories */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="font-semibold text-lg mb-3 text-gray-800">
+                Stories
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-r from-yellow-400 to-pink-500">
+                    <div className="w-full h-full rounded-full bg-white p-0.5">
+                      <img
+                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80"
+                        alt="User"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">{author.full_name}</p>
-                    <p className="text-xs text-slate-500">{calcTimeAgo(post.createdAt.toString())} · Đà Lạt</p>
+                    <h3 className="font-medium text-sm">Your Story</h3>
+                    <p className="text-xs text-gray-500">Add to your story</p>
                   </div>
                 </div>
-                <button className="text-slate-400 hover:text-slate-600">•••</button>
-              </div>
-              <p className="mt-4 text-sm leading-relaxed text-slate-700 sm:text-base">
-                {content}
-              </p>
-            </div>
-            <div className="h-72 bg-gradient-to-br from-emerald-200 via-cyan-200 to-sky-300 sm:h-96" />
-            <div className="p-4 sm:p-5">
-              <div className="mb-3 flex items-center justify-between text-xs text-slate-500 sm:text-sm">
-                <span>2.3K lượt thích</span>
-                <span>318 bình luận · 42 lượt chia sẻ</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center text-sm font-medium">
-                <button className="rounded-xl bg-slate-100 py-2 text-slate-600 hover:bg-slate-200">Thích</button>
-                <button className="rounded-xl bg-slate-100 py-2 text-slate-600 hover:bg-slate-200">Bình luận</button>
-                <button className="rounded-xl bg-slate-100 py-2 text-slate-600 hover:bg-slate-200">Chia sẻ</button>
               </div>
             </div>
-          </article>
-}
 
-export default function Post() {
-    const [postData, setPostData] = useState<PostProps[]>([]);
-    useEffect(()=>{
-        fetch('http://localhost:3000/post')
-        .then(res => res.json())
-        .then(data => setPostData(data));
-    },[]);
-  return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#ffffff_40%,_#fef9c3_100%)] pb-16">
-      <div className="mx-auto grid w-full max-w-7xl">
-        <section className="w-[50%] mx-auto space-y-6 py-10">
+            {/* Suggested People */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="font-semibold text-lg text-gray-800">
+                  Suggested People
+                </h2>
+                <button className="text-sm text-sky-600 hover:text-sky-800">
+                  See All
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80"
+                      alt="User"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <h3 className="font-medium text-sm">David Miller</h3>
+                      <p className="text-xs text-gray-500">Photographer</p>
+                    </div>
+                  </div>
+                  <button className="text-xs px-3 py-1 bg-sky-50 text-sky-600 rounded-full hover:bg-sky-100">
+                    Follow
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            {postData.map((post) => (
-                <Article key={post.post_id} {...post}/>
-            ))}
-        </section>
+            {/* Trending Topics */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="font-semibold text-lg mb-3 text-gray-800">
+                Trending Topics
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1 w-3 h-3 rounded-full bg-sky-500" />
+                  <div>
+                    <h3 className="font-medium text-sm">#WebDevelopment</h3>
+                    <p className="text-xs text-gray-500">12.5K posts</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1 w-3 h-3 rounded-full bg-violet-500" />
+                  <div>
+                    <h3 className="font-medium text-sm">#DigitalArt</h3>
+                    <p className="text-xs text-gray-500">8.2K posts</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1 w-3 h-3 rounded-full bg-yellow-500" />
+                  <div>
+                    <h3 className="font-medium text-sm">#RemoteWork</h3>
+                    <p className="text-xs text-gray-500">5.7K posts</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
-    </main>
+    </div>
   );
 }
