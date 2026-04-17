@@ -9,6 +9,14 @@ export default function SignUpButton() {
         router.push('/register');
     }
   return (
-    <Link className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-300 ease-in-out" href={"/register"}>Sign up </Link>
+    <Link
+      href="/register"
+      className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2
+                text-sm font-semibold text-white shadow-sm
+                hover:bg-slate-800 active:scale-[0.98]
+                transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1"
+    >
+      Sign Up
+  </Link>
   )
 }

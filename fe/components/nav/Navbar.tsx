@@ -47,7 +47,7 @@ export function Navbar({webName, subtitle, itemOnNav} : NavbarProps) {
               )
           })}
         </div>
-        {user ? <><Dropdown/></> : <><div>
+        {user ? <><Dropdown/></> : <><div className="gap-3 flex">
           <SignUpButton/>
           <LoginButton/>
           <Dropdown/>

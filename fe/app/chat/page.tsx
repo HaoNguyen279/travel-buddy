@@ -107,7 +107,7 @@ const AdvancedChatTest: React.FC = () => {
         <strong>Tôi là: </strong>
         <input
           type="text"
-          value={currentUser}
+          value={currentUser!}
           onChange={(e) => setCurrentUser(e.target.value)}
           style={{ padding: "5px", marginLeft: "10px" }}
         />
