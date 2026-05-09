@@ -4,11 +4,14 @@ import Image from "next/image";
 import { auth } from "@/lib/firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
-
+import { useState } from "react";
+import api from "@/services/api";
 export function LoginForm() {
   const router = useRouter();
-
-  const handleLogin = async () => {
+  const [emailValidationMessage, setEmailValidationMessage] = useState("");
+  const [passwordValidationMessage, setPasswordValidationMessage] = useState("");
+  const [submitMessage, setSubmitMessage] = useState("");
+  const handleLoginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -18,7 +21,44 @@ export function LoginForm() {
       console.error("Google sign-in error:", error);
     }
   };
+  const handleLogin = async (e : React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      email: formData.get("login-email") as string,
+      password: formData.get("login-password") as string,
+    }
+    let isValid = true;
+    setEmailValidationMessage("");
+    setPasswordValidationMessage("");
 
+    if(data.email === "" || data.password === ""){
+      setEmailValidationMessage("Email không được để trống.");
+      setPasswordValidationMessage("Mật khẩu không được để trống.");
+      isValid = false;
+    }
+    if(data.email === ""){
+      setEmailValidationMessage("Email không được để trống.");
+      isValid = false;
+    }
+    if(data.password === ""){
+      setPasswordValidationMessage("Mật khẩu không được để trống.");
+      isValid = false;
+    }
+    if(!isValid) return;
+
+    try { const response = await api.post("/auth/login", data); 
+      console.log(response.data);
+      if(response.data.success){
+        router.replace("/");
+      } else {
+        setSubmitMessage(response.data.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setSubmitMessage("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
+    }
+    };
   return (
     <div className="block">
       <div className="my-6 text-center">
@@ -30,7 +70,7 @@ export function LoginForm() {
           </p> */}
         </div>
 
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-4" onSubmit={handleLogin}>
           {/* Email */}
           <div className="space-y-1.5">
             <label
@@ -42,6 +82,7 @@ export function LoginForm() {
             <input
               id="login-email"
               type="email"
+              name="login-email"
               placeholder="you@example.com"
               className="w-full h-11 rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400
                          outline-none transition-all duration-200
@@ -64,6 +105,7 @@ export function LoginForm() {
               className="w-full h-11 rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400
                          outline-none transition-all duration-200
                          focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+              name="login-password"
             />
           </div>
 
@@ -92,7 +134,7 @@ export function LoginForm() {
           {/* Google button */}
           <button
             type="button"
-            onClick={handleLogin}
+            onClick={handleLoginWithGoogle}
             className="w-full h-11 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-semibold
                        hover:bg-slate-50 hover:border-slate-400 active:scale-[0.99] transition-all duration-200
                        shadow-sm flex items-center justify-center gap-2

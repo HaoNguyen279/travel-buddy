@@ -43,7 +43,13 @@ export function Navbar({webName, subtitle, itemOnNav} : NavbarProps) {
         <div className="flex items-center">
           {itemOnNav.map((item)=>{
               return(
-                  <Link className="p-2 text-gray-900 hover:text-blue-700 trasition-colors duration-300 ease-in-out" key={item.itemName} href={item.linkTo}>{item.itemName}</Link>
+                              <Link
+              key={item.itemName}
+              href={item.linkTo}
+              className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
+            >
+              {item.itemName}
+            </Link>
               )
           })}
         </div>
