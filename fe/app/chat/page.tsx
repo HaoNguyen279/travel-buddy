@@ -1,5 +1,5 @@
 "use client";
-
+import { Navbar } from "@/components/nav/Navbar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addDoc,
@@ -57,6 +57,24 @@ type ChatMessage = {
 
 const FALLBACK_AVATAR = "👤";
 const URL_PATTERN = /^https?:\/\//i;
+const navProps = {
+  webName: "TravelBuddy",
+  subtitle: "alo",
+  itemOnNav: [
+    {
+      itemName: "Post",
+      linkTo: "/post",
+    },
+    {
+      itemName: "Place",
+      linkTo: "/place/da-nang",
+    },
+    {
+      itemName: "Chat",
+      linkTo: "/chat",
+    },
+  ],
+};
 
 function sortByLatestRooms(a: ChatRoom, b: ChatRoom) {
   const aTs = a.lastMessageAt?.toMillis() ?? 0;
@@ -84,7 +102,11 @@ function getDisplayNameByUid(
   allUsersMap: Map<string, UserProfile>,
 ) {
   if (!uid) return "Direct Chat";
-  return profiles?.[uid]?.displayName || allUsersMap.get(uid)?.displayName || "Direct Chat";
+  return (
+    profiles?.[uid]?.displayName ||
+    allUsersMap.get(uid)?.displayName ||
+    "Direct Chat"
+  );
 }
 
 function getAvatarByUid(
@@ -112,7 +134,9 @@ function AvatarCircle({
   const avatarValue = (value || FALLBACK_AVATAR).trim();
   const isImageUrl = URL_PATTERN.test(avatarValue);
   const textAvatar =
-    avatarValue.length === 1 ? avatarValue : avatarValue.charAt(0).toUpperCase();
+    avatarValue.length === 1
+      ? avatarValue
+      : avatarValue.charAt(0).toUpperCase();
 
   return (
     <div
@@ -152,7 +176,10 @@ export default function ChatPage() {
 
   const messagesBottomRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const usersMap = useMemo(() => new Map(users.map((item) => [item.uid, item])), [users]);
+  const usersMap = useMemo(
+    () => new Map(users.map((item) => [item.uid, item])),
+    [users],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -174,14 +201,20 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user) return;
 
-    const usersQuery = query(collection(db, "users"), orderBy("displayName", "asc"));
+    const usersQuery = query(
+      collection(db, "users"),
+      orderBy("displayName", "asc"),
+    );
     const unsubscribe = onSnapshot(usersQuery, (snapshot) => {
       const userList = snapshot.docs
         .map((docItem) => {
           const data = docItem.data();
           return {
             uid: docItem.id,
-            displayName: typeof data.displayName === "string" ? data.displayName : "Anonymous",
+            displayName:
+              typeof data.displayName === "string"
+                ? data.displayName
+                : "Anonymous",
             avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : "",
             email: typeof data.email === "string" ? data.email : "",
           } satisfies UserProfile;
@@ -215,12 +248,16 @@ export default function ChatPage() {
               ? (data.participants as string[])
               : [],
             participantProfiles:
-              typeof data.participantProfiles === "object" && data.participantProfiles
+              typeof data.participantProfiles === "object" &&
+              data.participantProfiles
                 ? (data.participantProfiles as Record<string, UserProfile>)
                 : {},
-            lastMessage: typeof data.lastMessage === "string" ? data.lastMessage : "",
+            lastMessage:
+              typeof data.lastMessage === "string" ? data.lastMessage : "",
             lastMessageAt:
-              data.lastMessageAt instanceof Timestamp ? data.lastMessageAt : null,
+              data.lastMessageAt instanceof Timestamp
+                ? data.lastMessageAt
+                : null,
           } satisfies ChatRoom;
         })
         .sort(sortByLatestRooms);
@@ -263,7 +300,8 @@ export default function ChatPage() {
             typeof data.senderName === "string" ? data.senderName : "Anonymous",
           senderAvatar:
             typeof data.senderAvatar === "string" ? data.senderAvatar : "",
-          createdAt: data.createdAt instanceof Timestamp ? data.createdAt : null,
+          createdAt:
+            data.createdAt instanceof Timestamp ? data.createdAt : null,
         } satisfies ChatMessage;
       });
       setMessages(messageItems);
@@ -297,8 +335,16 @@ export default function ChatPage() {
     const targetId = activeRoom.participants.find((id) => id !== user.uid);
 
     return {
-      name: getDisplayNameByUid(targetId, activeRoom.participantProfiles, usersMap),
-      avatar: getAvatarByUid(targetId, activeRoom.participantProfiles, usersMap),
+      name: getDisplayNameByUid(
+        targetId,
+        activeRoom.participantProfiles,
+        usersMap,
+      ),
+      avatar: getAvatarByUid(
+        targetId,
+        activeRoom.participantProfiles,
+        usersMap,
+      ),
       peerUid: targetId || null,
     };
   }, [activeRoom, user, usersMap]);
@@ -339,14 +385,11 @@ export default function ChatPage() {
 
     return {
       uid: user.uid,
-      displayName: myProfile?.displayName || user.displayName || user.email || "Anonymous",
+      displayName:
+        myProfile?.displayName || user.displayName || user.email || "Anonymous",
       photoURL: myProfile?.avatarUrl || user.photoURL || "",
     };
-  }, [
-    user,
-    myProfile?.displayName,
-    myProfile?.avatarUrl,
-  ]);
+  }, [user, myProfile?.displayName, myProfile?.avatarUrl]);
 
   const { typingUsers, setTyping } = useRoomTyping(activeRoomId, typingActor);
 
@@ -536,11 +579,18 @@ export default function ChatPage() {
   }
 
   if (!user) {
-    return <main className="px-4 py-10">Bạn cần đăng nhập để sử dụng chat.</main>;
+    return (
+      <main className="px-4 py-10">Bạn cần đăng nhập để sử dụng chat.</main>
+    );
   }
 
   return (
     <main className="px-4 py-8">
+      <Navbar
+        webName={navProps.webName}
+        subtitle={navProps.subtitle}
+        itemOnNav={navProps.itemOnNav}
+      />
       <section className="mx-auto flex h-[75vh] min-h-[620px] w-full max-w-[1400px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <aside className="flex w-[360px] flex-col border-r border-slate-200 bg-slate-50/70 p-6">
           <div className="mb-6 flex items-center justify-between">
@@ -587,15 +637,25 @@ export default function ChatPage() {
             ) : (
               visibleRooms.map((room) => {
                 const isActive = room.id === activeRoomId;
-                const directPeerId = room.participants.find((id) => id !== user.uid);
+                const directPeerId = room.participants.find(
+                  (id) => id !== user.uid,
+                );
                 const roomName =
                   room.type === "group"
                     ? room.name || "Group Chat"
-                    : getDisplayNameByUid(directPeerId, room.participantProfiles, usersMap);
+                    : getDisplayNameByUid(
+                        directPeerId,
+                        room.participantProfiles,
+                        usersMap,
+                      );
                 const roomAvatar =
                   room.type === "group"
                     ? room.avatarUrl || "👥"
-                    : getAvatarByUid(directPeerId, room.participantProfiles, usersMap);
+                    : getAvatarByUid(
+                        directPeerId,
+                        room.participantProfiles,
+                        usersMap,
+                      );
 
                 return (
                   <button
@@ -609,9 +669,14 @@ export default function ChatPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <AvatarCircle value={roomAvatar} className="h-12 w-12 text-lg font-semibold" />
+                      <AvatarCircle
+                        value={roomAvatar}
+                        className="h-12 w-12 text-lg font-semibold"
+                      />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-lg font-semibold text-slate-900">{roomName}</p>
+                        <p className="truncate text-lg font-semibold text-slate-900">
+                          {roomName}
+                        </p>
                         <p className="truncate text-sm text-slate-500">
                           {room.lastMessage || "Chưa có tin nhắn"}
                         </p>
@@ -630,13 +695,20 @@ export default function ChatPage() {
         <div className="flex flex-1 flex-col">
           <header className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
             <div className="flex items-center gap-3">
-              <AvatarCircle value={activeRoomIdentity.avatar} className="h-11 w-11 text-lg" />
+              <AvatarCircle
+                value={activeRoomIdentity.avatar}
+                className="h-11 w-11 text-lg"
+              />
               <div>
-                <p className="text-lg font-semibold text-slate-900">{activeRoomIdentity.name}</p>
+                <p className="text-lg font-semibold text-slate-900">
+                  {activeRoomIdentity.name}
+                </p>
                 {activeRoomIdentity.peerUid && (
                   <p
                     className={`text-xs ${
-                      peerPresence.state === "online" ? "text-emerald-600" : "text-slate-400"
+                      peerPresence.state === "online"
+                        ? "text-emerald-600"
+                        : "text-slate-400"
                     }`}
                   >
                     {peerPresence.state === "online"
@@ -654,7 +726,9 @@ export default function ChatPage() {
 
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
             {messages.length === 0 ? (
-              <p className="text-center text-slate-400">Chưa có tin nhắn trong cuộc trò chuyện này.</p>
+              <p className="text-center text-slate-400">
+                Chưa có tin nhắn trong cuộc trò chuyện này.
+              </p>
             ) : (
               messages.map((msg) => {
                 const isMe = msg.senderId === user.uid;
@@ -671,15 +745,26 @@ export default function ChatPage() {
                     )}
                     <div
                       className={`max-w-[70%] rounded-2xl px-4 py-3 text-base ${
-                        isMe ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-900"
+                        isMe
+                          ? "bg-blue-500 text-white"
+                          : "bg-slate-100 text-slate-900"
                       }`}
                     >
-                      {!isMe && <p className="mb-1 text-xs text-slate-500">{msg.senderName}</p>}
+                      {!isMe && (
+                        <p className="mb-1 text-xs text-slate-500">
+                          {msg.senderName}
+                        </p>
+                      )}
                       <p>{msg.text}</p>
                     </div>
                     {isMe && (
                       <AvatarCircle
-                        value={user.photoURL || user.displayName || user.email || "Me"}
+                        value={
+                          user.photoURL ||
+                          user.displayName ||
+                          user.email ||
+                          "Me"
+                        }
                         className="h-9 w-9 bg-slate-900 text-xs font-semibold text-white"
                       />
                     )}
@@ -693,7 +778,8 @@ export default function ChatPage() {
           <div className="border-t border-slate-200 p-4">
             {typingUsers.length > 0 && (
               <p className="mb-2 text-sm text-slate-500">
-                {typingUsers.map((item) => item.displayName).join(", ")} đang nhập...
+                {typingUsers.map((item) => item.displayName).join(", ")} đang
+                nhập...
               </p>
             )}
             <form
@@ -719,7 +805,9 @@ export default function ChatPage() {
                 Gửi
               </button>
             </form>
-            {typingError && <p className="mt-2 text-xs text-rose-500">{typingError}</p>}
+            {typingError && (
+              <p className="mt-2 text-xs text-rose-500">{typingError}</p>
+            )}
           </div>
         </div>
       </section>
@@ -728,7 +816,9 @@ export default function ChatPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-slate-900">Create New Chat</h2>
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Create New Chat
+              </h2>
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(false)}
@@ -782,7 +872,9 @@ export default function ChatPage() {
 
             <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3">
               {filteredUsers.length === 0 ? (
-                <p className="text-sm text-slate-500">Không tìm thấy người dùng phù hợp.</p>
+                <p className="text-sm text-slate-500">
+                  Không tìm thấy người dùng phù hợp.
+                </p>
               ) : (
                 filteredUsers.map((item) => {
                   const selected = selectedUserIds.includes(item.uid);
@@ -798,16 +890,33 @@ export default function ChatPage() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <AvatarCircle value={getAvatarLabel(item)} className="h-9 w-9 text-sm" />
+                        <AvatarCircle
+                          value={getAvatarLabel(item)}
+                          className="h-9 w-9 text-sm"
+                        />
                         <div>
-                          <p className="font-medium text-slate-900">{item.displayName}</p>
+                          <p className="font-medium text-slate-900">
+                            {item.displayName}
+                          </p>
                           <p className="text-xs text-slate-500">{item.email}</p>
                         </div>
                       </div>
                       {createType === "group" ? (
-                        <Users size={18} className={selected ? "text-blue-500" : "text-slate-400"} />
+                        <Users
+                          size={18}
+                          className={
+                            selected ? "text-blue-500" : "text-slate-400"
+                          }
+                        />
                       ) : (
-                        <Circle size={18} className={selected ? "fill-blue-500 text-blue-500" : "text-slate-400"} />
+                        <Circle
+                          size={18}
+                          className={
+                            selected
+                              ? "fill-blue-500 text-blue-500"
+                              : "text-slate-400"
+                          }
+                        />
                       )}
                     </button>
                   );
@@ -815,7 +924,9 @@ export default function ChatPage() {
               )}
             </div>
 
-            {createError && <p className="mt-3 text-sm text-red-600">{createError}</p>}
+            {createError && (
+              <p className="mt-3 text-sm text-red-600">{createError}</p>
+            )}
 
             <div className="mt-5 flex justify-end gap-3">
               <button
