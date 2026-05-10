@@ -1,15 +1,11 @@
 "use client"
 import { ref, onValue, set, push, serverTimestamp} from "firebase/database";
-import  { db } from '@/lib/firebase'
+import  { rtdb } from '@/lib/firebase'
 import { Ref, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const starCountRef = ref(db, 'post/' );
+const starCountRef = ref(rtdb, 'post/' );
 
-onValue(starCountRef, (snapshot) =>{
-    const data = snapshot.val();
-    console.log("Dữ liệu nè :", data);
-})
 
 type Message = {
   id: string;
@@ -27,7 +23,7 @@ export default function FirebaseApp(){
 
     const sendMessage = useCallback((roomId: string, text: string, user: string) => {
         console.log("Clicked");
-        const messagesRef = ref(db, 'message/' + roomId);
+        const messagesRef = ref(rtdb, 'message/' + roomId);
         const newMessagesRef = push(messagesRef);
         set(newMessagesRef, {
             sender: user,
@@ -36,7 +32,7 @@ export default function FirebaseApp(){
         })
     }, []);
     useEffect(()=>{
-        const messageRef = ref(db, 'message/');
+        const messageRef = ref(rtdb, 'message/');
         const unsubscribe = onValue(messageRef, (snapshot) => {
             const data = snapshot.val().room1;
             if(data){

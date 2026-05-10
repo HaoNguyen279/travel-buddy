@@ -39,7 +39,7 @@ const PlaceComponent = ({place} : {place: PlaceProps}) => {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-medium text-slate-500">
-            Chua co hinh anh
+            Chua co hinh anh  
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />

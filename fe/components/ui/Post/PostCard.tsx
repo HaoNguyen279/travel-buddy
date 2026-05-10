@@ -1,4 +1,17 @@
-export function PostCard({ post }) {
+
+type PostCardProps = {
+  post: {
+    post_id: string;
+    user_id: string;
+    createdAt: string;
+    content: string;
+    image_url: string | null;
+    place_id: string;
+  };
+};
+
+
+export function PostCard({ post }: PostCardProps) {
   const shortUserId = post.user_id.slice(0, 8).toUpperCase();
   const formattedDate = new Date(post.createdAt).toLocaleString("vi-VN");
 

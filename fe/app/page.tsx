@@ -3,6 +3,7 @@ import { RecommendCard } from "@/components/ui/RecommendCard";
 import { SectionHeading } from "@/components/section/SectionHeading";
 import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
+import TravelSearch from "@/components/ui/TravelSearch";
 
 
 
@@ -15,34 +16,88 @@ const heroStats = [
 
 const experiences = [
   {
-    imgUrl:
-      "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=1200&q=80",
-    altText: "Đi bộ trên dãy núi",
-    badge: "Outdoor",
-    title: "Hiking Sapa 2 ngày",
-    description:
-      "Săn mây buổi sớm, trekking bản làng và thưởng thức ẩm thực địa phương trong hành trình ngắn ngày.",
-    actionLabel: "Lưu lịch trình",
+    imgUrl: "https://oldquartertravel.com/wp-content/uploads/2018/08/sapa-trekking-3d2n.jpg",
+    title: "Sapa Trekking Homestay - View thung lũng Mường Hoa",
+    type: "Homestay",
+    location: "Sa Pa, Lào Cai, Việt Nam",
+    rating: 9.2,
+    reviewsCount: 156,
+    ratingText: "Tuyệt vời",
+    distance: "2.5 km từ trung tâm",
+    originalPrice: "850.000",
+    discountPrice: "520.000",
+    currency: "VND",
+    isGenius: true,
   },
   {
-    imgUrl:
-      "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80",
-    altText: "Bãi biển xanh",
-    badge: "Biển",
-    title: "Resort biển Phú Quốc",
-    description:
-      "Kỳ nghỉ nhẹ nhàng với combo resort, lặn ngắm san hô và lịch trình tối ưu ngân sách cho nhóm bạn.",
-    actionLabel: "Xem gói",
+    imgUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=800",
+    title: "Phu Quoc Luxury Emerald Bay Resort & Spa",
+    type: "Resort",
+    location: "An Thới, Phú Quốc, Việt Nam",
+    rating: 9.8,
+    reviewsCount: 420,
+    ratingText: "Ngoại hạng",
+    distance: "giáp biển",
+    originalPrice: "4.200.000",
+    discountPrice: "2.850.000",
+    currency: "VND",
+    isGenius: true,
   },
   {
-    imgUrl:
-      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
-    altText: "Khu phố cổ về đêm",
-    badge: "City",
-    title: "City break Hà Nội",
-    description:
-      "Checklist quán ngon, điểm sống ảo và lộ trình di chuyển thông minh cho chuyến đi cuối tuần.",
-    actionLabel: "Xem đề xuất",
+    imgUrl: "https://cdn.justfly.vn/1500x1000/media/73/11/f365-0a52-4b0a-b249-fb2cd8a1dc62.jpg",
+    title: "Hanoi Old Quarter Boutique Hotel - Gần Hồ Gươm",
+    type: "Khách sạn",
+    location: "Hoàn Kiếm, Hà Nội, Việt Nam",
+    rating: 8.9,
+    reviewsCount: 89,
+    ratingText: "Rất tốt",
+    distance: "0.2 km từ trung tâm",
+    originalPrice: "1.500.000",
+    discountPrice: "950.000",
+    currency: "VND",
+    isGenius: false,
+  },
+  {
+    imgUrl: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?q=80&w=800",
+    title: "Dalat Pine Villa - Biệt thự gỗ giữa rừng thông",
+    type: "Villa",
+    location: "Phường 10, Đà Lạt, Việt Nam",
+    rating: 9.4,
+    reviewsCount: 215,
+    ratingText: "Tuyệt hảo",
+    distance: "3.2 km từ trung tâm",
+    originalPrice: "2.100.000",
+    discountPrice: "1.450.000",
+    currency: "VND",
+    isGenius: true,
+  },
+  {
+    imgUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800",
+    title: "Hoi An Riverside Heritage - Phố cổ lung linh",
+    type: "Boutique Hotel",
+    location: "Minh An, Hội An, Việt Nam",
+    rating: 9.6,
+    reviewsCount: 310,
+    ratingText: "Xuất sắc",
+    distance: "0.5 km từ trung tâm",
+    originalPrice: "1.800.000",
+    discountPrice: "1.200.000",
+    currency: "VND",
+    isGenius: true,
+  },
+  {
+    imgUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800",
+    title: "Vung Tau Sea View Apartment - Căn hộ hướng biển",
+    type: "Căn hộ",
+    location: "Bãi Sau, Vũng Tàu, Việt Nam",
+    rating: 8.5,
+    reviewsCount: 67,
+    ratingText: "Tốt",
+    distance: "0.1 km từ bãi biển",
+    originalPrice: "1.250.000",
+    discountPrice: "890.000",
+    currency: "VND",
+    isGenius: false,
   },
 ];
 
@@ -77,11 +132,89 @@ const destinations = [
   },
 ];
 
+const navProps = {
+  webName : "TravelBuddy",
+  subtitle : "alo",
+  itemOnNav : [
+    {
+      itemName: "Post",
+      linkTo : "/post"
+    },
+    {
+      itemName: "Place",
+      linkTo : "/place/da-nang"
+    },
+    {
+      itemName: "Chat",
+      linkTo : "/chat"
+    },
+  ]
+}
+
+const dataFooter = [
+  {
+    "footerTitle": "Support",
+    "footerItems": [
+      { "itemName": "Manage your trips", "linkTo": "#" },
+      { "itemName": "Contact Customer Service", "linkTo": "#" },
+      { "itemName": "Safety Resource Center", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "Discover",
+    "footerItems": [
+      { "itemName": "Genius loyalty program", "linkTo": "#" },
+      { "itemName": "Seasonal and holiday deals", "linkTo": "#" },
+      { "itemName": "Travel articles", "linkTo": "#" },
+      { "itemName": "Booking.com for Business", "linkTo": "#" },
+      { "itemName": "Traveller Review Awards", "linkTo": "#" },
+      { "itemName": "Car rental", "linkTo": "#" },
+      { "itemName": "Flight finder", "linkTo": "#" },
+      { "itemName": "Restaurant reservations", "linkTo": "#" },
+      { "itemName": "Booking.com for Travel Agents", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "Terms and settings",
+    "footerItems": [
+      { "itemName": "Privacy Notice", "linkTo": "#" },
+      { "itemName": "Terms of Service", "linkTo": "#" },
+      { "itemName": "Accessibility Statement", "linkTo": "#" },
+      { "itemName": "Partner dispute", "linkTo": "#" },
+      { "itemName": "Modern Slavery Statement", "linkTo": "#" },
+      { "itemName": "Human Rights Statement", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "Partners",
+    "footerItems": [
+      { "itemName": "Extranet login", "linkTo": "#" },
+      { "itemName": "Partner help", "linkTo": "#" },
+      { "itemName": "List your property", "linkTo": "#" },
+      { "itemName": "Become an affiliate", "linkTo": "#" }
+    ]
+  },
+  {
+    "footerTitle": "About",
+    "footerItems": [
+      { "itemName": "About Booking.com", "linkTo": "#" },
+      { "itemName": "How We Work", "linkTo": "#" },
+      { "itemName": "Sustainability", "linkTo": "#" },
+      { "itemName": "Press center", "linkTo": "#" },
+      { "itemName": "Careers", "linkTo": "#" },
+      { "itemName": "Investor relations", "linkTo": "#" },
+      { "itemName": "Corporate contact", "linkTo": "#" },
+      { "itemName": "Content guidelines and reporting", "linkTo": "#" }
+    ]
+  }
+]
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
+      <Navbar webName={navProps.webName} subtitle={navProps.subtitle} itemOnNav={navProps.itemOnNav} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
-
+        
         
 
         <section className="space-y-5">
@@ -89,20 +222,13 @@ export default function Home() {
             title="Trải nghiệm nổi bật"
             description="Các hành trình ngắn ngày được cộng đồng lưu nhiều nhất tuần này."
           />
+          <TravelSearch/>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {experiences.map((item) => (
-              <ItemCard
-                key={item.title}
-                imgUrl={item.imgUrl}
-                altText={item.altText}
-                badge={item.badge}
-                title={item.title}
-                description={item.description}
-                actionLabel={item.actionLabel}
-              />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+          {experiences.map((item, index) => (
+            <ItemCard key={index} {...item} />
+          ))}
+        </div>
         </section>
 
         <section className="space-y-5 pb-4">
@@ -124,6 +250,7 @@ export default function Home() {
           </div>
         </section>
       </div>
+      <Footer props={dataFooter}/>
     </main>
   );
 }
