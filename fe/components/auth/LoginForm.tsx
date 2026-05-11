@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { auth } from "@/lib/firebase";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import api from "@/services/api";
@@ -11,16 +11,28 @@ export function LoginForm() {
   const [emailValidationMessage, setEmailValidationMessage] = useState("");
   const [passwordValidationMessage, setPasswordValidationMessage] = useState("");
   const [submitMessage, setSubmitMessage] = useState("");
+
+
   const handleLoginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      if (result.user) router.replace("/");
+      const idToken = await result.user.getIdToken();
+      // Gửi ID token lên backend để xác thực và nhận token của ứng dụng
+      const response = await api.post("/auth/google-login", { idToken });
+      console.log(response.data);
+      if (result.user && response.data.success) {
+        router.replace("/");
+      }
       console.log(result.user);
     } catch (error) {
       console.error("Google sign-in error:", error);
     }
   };
+
+
+
+
   const handleLogin = async (e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -47,7 +59,10 @@ export function LoginForm() {
     }
     if(!isValid) return;
 
-    try { const response = await api.post("/auth/login", data); 
+    try {
+      const credential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const idToken = await credential.user.getIdToken();
+      const response = await api.post("/auth/login", { idToken });
       console.log(response.data);
       if(response.data.success){
         router.replace("/");
@@ -55,6 +70,15 @@ export function LoginForm() {
         setSubmitMessage(response.data.message || "Đăng nhập thất bại. Vui lòng thử lại.");
       }
     } catch (error) {
+      const errorCode = typeof error === "object" && error && "code" in error ? (error as { code: string }).code : "";
+      if (errorCode === "auth/invalid-credential" || errorCode === "auth/wrong-password") {
+        setSubmitMessage("Email hoặc mật khẩu không đúng.");
+        return;
+      }
+      if (errorCode === "auth/user-not-found") {
+        setSubmitMessage("Tài khoản không tồn tại.");
+        return;
+      }
       console.error("Login error:", error);
       setSubmitMessage("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
     }
@@ -89,6 +113,11 @@ export function LoginForm() {
                          focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
             />
           </div>
+          {
+            emailValidationMessage && (
+              <p className="text-sm text-red-500">{emailValidationMessage}</p>
+            )
+          }
 
           {/* Password */}
           <div className="space-y-1.5">
@@ -108,6 +137,15 @@ export function LoginForm() {
               name="login-password"
             />
           </div>
+          {
+            passwordValidationMessage && (
+              <p className="text-sm text-red-500">{passwordValidationMessage}</p>
+            )
+          }
+
+          {submitMessage && (
+            <p className="text-sm text-red-500">{submitMessage}</p>
+          )}
 
           {/* Main Sign-in button */}
           <button

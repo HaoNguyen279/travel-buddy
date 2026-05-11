@@ -1,12 +1,14 @@
 "use client";
 import api from "@/services/api";
-import { log } from "console";
 import { useState } from "react"; 
-
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, EmailAuthProvider, GoogleAuthProvider, linkWithCredential, signInWithPopup } from "firebase/auth";
+import { useRouter } from "next/navigation";
  
 export function RegisterForm() {
+  const router = useRouter();
   const [fullnameValidationMessage, setFullnameValidationMessage] = useState("");
-  const [usernameValidationMessage, setUsernameValidationMessage] = useState("");
+  // const [usernameValidationMessage, setUsernameValidationMessage] = useState("");
   const [emailValidationMessage, setEmailValidationMessage] = useState("");
   const [phoneValidationMessage, setPhoneValidationMessage] = useState("");
   const [passwordValidationMessage, setPasswordValidationMessage] = useState("");
@@ -18,17 +20,15 @@ export function RegisterForm() {
   const formData = new FormData(e.currentTarget);
   const data = {
     fullname: formData.get("register-fullname") as string,
-    username: formData.get("register-username") as string,
     email: formData.get("register-email") as string,
     phone: formData.get("register-phone") as string,
     password: formData.get("register-password") as string,
     confirmPassword: formData.get("register-confirm-password") as string,
   }
-  console.log(data);
-  let isValid = true;
+  console.log(data);  let isValid = true;
 
   setFullnameValidationMessage("");
-  setUsernameValidationMessage("");
+  // setUsernameValidationMessage("");
   setEmailValidationMessage("");
   setPhoneValidationMessage("");
   setPasswordValidationMessage("");
@@ -36,10 +36,6 @@ export function RegisterForm() {
 
   if(data.fullname === ""){
     setFullnameValidationMessage("Họ và tên không được để trống.");
-    isValid = false;
-  }
-  if(data.username === ""){
-    setUsernameValidationMessage("Tên người dùng không được để trống.");
     isValid = false;
   }
   if(data.email === ""){
@@ -62,10 +58,10 @@ export function RegisterForm() {
     setFullnameValidationMessage("Họ và tên chỉ được chứa chữ cái và khoảng trắng.");
     isValid = false;
   }
-  if(data.username && !/^[a-zA-Z0-9_]+$/.test(data.username)){
-    setUsernameValidationMessage("Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới.");
-    isValid = false;
-  }
+  // if(data.username && !/^[a-zA-Z0-9_]+$/.test(data.username)){
+  //   setUsernameValidationMessage("Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới.");
+  //   isValid = false;
+  // }
   if(data.phone && !/^\d{10}$/.test(data.phone)){
     setPhoneValidationMessage("Số điện thoại không hợp lệ. Vui lòng nhập từ 10 chữ số.");
     isValid = false;
@@ -82,19 +78,51 @@ export function RegisterForm() {
 
   if(!isValid) return;
 
-  try {    
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+    const idToken = await userCredential.user.getIdToken();
+    console.log("idToken length:", idToken?.length);
     const response = await api.post("/auth/register", {
+        idToken: idToken,   
         fullname: data.fullname,
-        username: data.username,
-        email: data.email,
         phone: data.phone,
-        password: data.password
-    });
-    console.log("Registration successful:", response.data);
+      });
+      console.log("Đăng ký và lưu DB thành công:", response.data);
+      if (response.data?.success) {
+        router.replace("/");
+      }
   } catch (error) {
+    const errorCode = typeof error === "object" && error && "code" in error ? (error as { code: string }).code : "";
+    if (errorCode === "auth/email-already-in-use") {
+      try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const googleEmail = result.user.email || "";
+        if (googleEmail.toLowerCase() !== data.email.toLowerCase()) {
+          setEmailValidationMessage("Email Google khong khop voi email dang ky.");
+          return;
+        }
+        const credential = EmailAuthProvider.credential(data.email, data.password);
+        await linkWithCredential(result.user, credential);
+        const idToken = await result.user.getIdToken();
+        const response = await api.post("/auth/register", {
+          idToken: idToken,
+          fullname: data.fullname,
+          phone: data.phone,
+        });
+        if (response.data?.success) {
+          router.replace("/");
+        }
+        return;
+      } catch (linkError) {
+        console.error("Registration link failed:", linkError);
+        setEmailValidationMessage("Khong the lien ket tai khoan. Vui long thu lai.");
+        return;
+      }
+    }
     console.error("Registration failed:", error);
   }
-} 
+}
   return (
     <div className="block">
       <div className="my-6 text-center">
@@ -128,7 +156,7 @@ export function RegisterForm() {
           </p>
         )}
 
-        {/* Username */}
+        {/* Username
         <div className="space-y-1.5">
           <label
             htmlFor="register-username"
@@ -150,7 +178,7 @@ export function RegisterForm() {
           <p className="text-red-600 text-sm">
             {usernameValidationMessage}
           </p>
-        )}
+        )} */}
 
         {/* Email */}
         <div className="space-y-1.5">
