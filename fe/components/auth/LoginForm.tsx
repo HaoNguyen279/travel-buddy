@@ -18,7 +18,6 @@ export function LoginForm() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
-      // Gửi ID token lên backend để xác thực và nhận token của ứng dụng
       const response = await api.post("/auth/google-login", { idToken });
       console.log(response.data);
       if (result.user && response.data.success) {

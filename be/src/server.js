@@ -7,6 +7,7 @@ const placeRouter = require('./routes/place.route');
 const userRouter = require('./routes/user.route');
 const authRouter = require('./routes/auth.route');
 const postRouter = require('./routes/post.route');
+const tourRouter = require('./routes/tour.route');
 // CORS policy
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001'],
@@ -31,6 +32,8 @@ app.use('/place', placeRouter);
 app.use('/post', postRouter);
 
 app.use('/auth', authRouter);
+
+app.use('/tour', tourRouter);
 
 
 const startServer = async () =>{

@@ -1,107 +1,44 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { ItemCard } from "@/components/ui/ItemCard";
 import { RecommendCard } from "@/components/ui/RecommendCard";
 import { SectionHeading } from "@/components/section/SectionHeading";
-import { HeroSection } from "@/components/section/HeroSection";
-import { WhyChooseUs } from "@/components/section/WhyChooseUs";
-import { Newsletter } from "@/components/section/Newsletter";
 import { CategoryGrid } from "@/components/section/CategoryGrid";
 import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
 import TravelSearch from "@/components/ui/TravelSearch";
+import { getTours } from "@/services/tourService";
 
 
-const experiences = [
-  {
-    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
-    imgUrl: "https://oldquartertravel.com/wp-content/uploads/2018/08/sapa-trekking-3d2n.jpg",
-    title: "Sapa Trekking Homestay - View thung lũng Mường Hoa",
-    type: "Homestay",
-    location: "Sa Pa, Lào Cai, Việt Nam",
-    rating: 9.2,
-    reviewsCount: 156,
-    ratingText: "Tuyệt vời",
-    distance: "2.5 km từ trung tâm",
-    originalPrice: "850.000",
-    discountPrice: "520.000",
-    currency: "VND",
-    isGenius: true,
-  },
-  {
-    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
-    imgUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=800",
-    title: "Phu Quoc Luxury Emerald Bay Resort & Spa",
-    type: "Resort",
-    location: "An Thới, Phú Quốc, Việt Nam",
-    rating: 9.8,
-    reviewsCount: 420,
-    ratingText: "Ngoại hạng",
-    distance: "giáp biển",
-    originalPrice: "4.200.000",
-    discountPrice: "2.850.000",
-    currency: "VND",
-    isGenius: true,
-  },
-  {
-    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
-    imgUrl: "https://cdn.justfly.vn/1500x1000/media/73/11/f365-0a52-4b0a-b249-fb2cd8a1dc62.jpg",
-    title: "Hanoi Old Quarter Boutique Hotel - Gần Hồ Gươm",
-    type: "Khách sạn",
-    location: "Hoàn Kiếm, Hà Nội, Việt Nam",
-    rating: 8.9,
-    reviewsCount: 89,
-    ratingText: "Rất tốt",
-    distance: "0.2 km từ trung tâm",
-    originalPrice: "1.500.000",
-    discountPrice: "950.000",
-    currency: "VND",
-    isGenius: false,
-  },
-  {
-    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
-    imgUrl: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?q=80&w=800",
-    title: "Dalat Pine Villa - Biệt thự gỗ giữa rừng thông",
-    type: "Villa",
-    location: "Phường 10, Đà Lạt, Việt Nam",
-    rating: 9.4,
-    reviewsCount: 215,
-    ratingText: "Tuyệt hảo",
-    distance: "3.2 km từ trung tâm",
-    originalPrice: "2.100.000",
-    discountPrice: "1.450.000",
-    currency: "VND",
-    isGenius: true,
-  },
-  {
-    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
-    imgUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800",
-    title: "Hoi An Riverside Heritage - Phố cổ lung linh",
-    type: "Boutique Hotel",
-    location: "Minh An, Hội An, Việt Nam",
-    rating: 9.6,
-    reviewsCount: 310,
-    ratingText: "Xuất sắc",
-    distance: "0.5 km từ trung tâm",
-    originalPrice: "1.800.000",
-    discountPrice: "1.200.000",
-    currency: "VND",
-    isGenius: true,
-  },
-  {
-    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
-    imgUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800",
-    title: "Vung Tau Sea View Apartment - Căn hộ hướng biển",
-    type: "Căn hộ",
-    location: "Bãi Sau, Vũng Tàu, Việt Nam",
-    rating: 8.5,
-    reviewsCount: 67,
-    ratingText: "Tốt",
-    distance: "0.1 km từ bãi biển",
-    originalPrice: "1.250.000",
-    discountPrice: "890.000",
-    currency: "VND",
-    isGenius: false,
-  },
-];
+type Tour = {
+  tour_id: string;
+  name: string;
+  base_price: number;
+  days: number;
+  nights: number;
+  booking_count: number;
+  image_url?: string | null;
+  average_rating: number;
+  ratings?: Array<unknown>;
+  place?: {
+    name?: string | null;
+  } | null;
+  category?: {
+    name?: string | null;
+  } | null;
+};
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("vi-VN").format(value);
+
+const getRatingText = (rating: number) => {
+  if (rating >= 9.5) return "Xuất sắc";
+  if (rating >= 9) return "Tuyệt hảo";
+  if (rating >= 8) return "Rất tốt";
+  if (rating >= 7) return "Tốt";
+  return "Ổn";
+};
 
 const destinations = [
   {
@@ -188,6 +125,37 @@ const dataFooter = [
 
 
 export default function Home() {
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchTours = async () => {
+      try {
+        const data = await getTours();
+        if (isMounted) {
+          setTours(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError("Không tải được danh sách tour. Vui lòng thử lại sau.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchTours();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar
@@ -220,11 +188,50 @@ export default function Home() {
             title="Trải nghiệm nổi bật"
             description="Các hành trình ngắn ngày được cộng đồng yêu thích nhất tuần này."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {experiences.map((item, index) => (
-              <ItemCard key={index} {...item} />
-            ))}
-          </div>
+          {isLoading && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
+              Đang tải dữ liệu tour...
+            </div>
+          )}
+          {!isLoading && error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+          {!isLoading && !error && tours.length === 0 && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
+              Chưa có tour nào để hiển thị.
+            </div>
+          )}
+          {!isLoading && !error && tours.length > 0 && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {tours.map((tour) => {
+                const reviewsCount =
+                  tour.ratings?.length ?? tour.booking_count ?? 0;
+
+                return (
+                  <ItemCard
+                    key={tour.tour_id}
+                    tour_id={tour.tour_id}
+                    imgUrl={
+                      tour.image_url ??
+                      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800"
+                    }
+                    title={tour.name}
+                    type={tour.category?.name ?? "Tour"}
+                    location={tour.place?.name ?? ""}
+                    rating={tour.average_rating ?? 0}
+                    reviewsCount={reviewsCount}
+                    ratingText={getRatingText(tour.average_rating ?? 0)}
+                    distance={`${tour.days} ngày ${tour.nights} đêm`}
+                    originalPrice={formatCurrency(tour.base_price)}
+                    discountPrice={formatCurrency(tour.base_price)}
+                    currency="VND"
+                  />
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Recommended Destinations */}
