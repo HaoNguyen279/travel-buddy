@@ -4,6 +4,7 @@
 import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import { SectionHeading } from "@/components/section/SectionHeading";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 
@@ -11,21 +12,25 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 type PlaceProps = {
-    place_id: Number,
-    name:  string,
-    description: string,
-    address: string,
-    city: string,
-    country: string
-    destination_id: string
-    category: string,
-    image_url: string,
-    average_rating: Number
-    createdAt: string
-    updatedAt: string
+  tour_id: string
+  place_id: string
+  category_id: string
+  name: string
+  description: string
+  base_price: number
+  days: number
+  nights: number
+  max_guests: number
+  min_guests: number
+  booking_count: number
+  image_url: string
+  average_rating: number
+  createdAt: Date
+  updatedAt: Date
+  deletedAt: Date | null
 }
 
-const PlaceComponent = ({place} : {place: PlaceProps}) => {
+const PlaceComponent = ({ place }: { place: PlaceProps }) => {
   const hasImage = Boolean(place.image_url);
 
   return (
@@ -39,13 +44,13 @@ const PlaceComponent = ({place} : {place: PlaceProps}) => {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-medium text-slate-500">
-            Chua co hinh anh  
+            Chua co hinh anh
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
         <div className="absolute bottom-3 left-3 flex items-center gap-2">
           <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700 backdrop-blur">
-            {place.category}
+            {place.category_id}
           </span>
           <span className="rounded-full bg-amber-100/95 px-3 py-1 text-xs font-semibold text-amber-700">
             ★ {Number(place.average_rating) || 0}
@@ -57,7 +62,7 @@ const PlaceComponent = ({place} : {place: PlaceProps}) => {
         <div className="space-y-1">
           <h2 className="line-clamp-1 text-lg font-semibold text-slate-900 sm:text-xl">{place.name}</h2>
           <p className="text-sm font-medium text-slate-500">
-            {place.city}, {place.country}
+            {/* {place.}, {place.country} */}
           </p>
         </div>
 
@@ -66,7 +71,7 @@ const PlaceComponent = ({place} : {place: PlaceProps}) => {
         </p>
 
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          {place.address}
+          {/* {place.address} */}
         </div>
       </div>
     </div>
@@ -75,14 +80,25 @@ const PlaceComponent = ({place} : {place: PlaceProps}) => {
 
 
 
-export default function Place({params} : Props) {
+export default function Place({ params }: Props) {
   const [places, setPlaces] = useState<PlaceProps[]>([]);
   const { id } = React.use(params);
-  useEffect(()=>{
-    fetch(`http://localhost:3000/place?destination=${id}`)
-    .then(res => res.json())
-    .then(data => setPlaces(data));
-  },[]);
+  const fetchTours = async () => {
+    try {
+      const res = await axios.get(`http://localhost:3000/tour/destination/:slug=${id}`)
+      const data = res.data;
+      setPlaces(data)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.error("Axios error:", err.response?.data)
+      } else {
+        console.error("Unexpected error:", err)
+      }
+    }
+  }
+  useEffect(() => {
+    fetchTours();
+  }, []);
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
       <div className="mx-auto flex w-[80%] max-w-6xl flex-col gap-10 pb-10 px-4 sm:px-6 lg:px-8">
@@ -102,22 +118,22 @@ export default function Place({params} : Props) {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">Bộ lọc</h2>
             </div>
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase text-slate-500">Country</h3> 
-                <label  className="flex items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
-                  />
-                  <span>Vietnam</span>
-                </label>
+              <h3 className="text-xs font-semibold uppercase text-slate-500">Country</h3>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                />
+                <span>Vietnam</span>
+              </label>
             </div>
           </section>
 
           <section className="grid w-[76%] grid-cols-1 gap-6 pl-6">
-          {places.map((item) => {
-            return <PlaceComponent key={item.place_id.toString()} place={item} />
-          })}
-        </section>
+            {places.map((item) => {
+              return <PlaceComponent key={item.tour_id.toString()} place={item} />
+            })}
+          </section>
         </div>
       </div>
     </main>

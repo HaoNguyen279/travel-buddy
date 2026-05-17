@@ -1,36 +1,58 @@
+import Link from "next/link";
+import Image from "next/image";
 
-// declare type chuan production vip pro max
 type FooterItems = {
-    itemName : string,
-    linkTo : string
-}
+  itemName: string;
+  linkTo: string;
+};
 type FooterProps = {
-    footerTitle : string,
-    footerItems : FooterItems[]
-}
+  footerTitle: string;
+  footerItems: FooterItems[];
+};
 
-
-export default function Footer({props} : {props : FooterProps[]}) {
+export default function Footer({ props }: { props: FooterProps[] }) {
   return (
-    <div style={{backgroundColor : "#f5f5f5"}} className="w-full text-center text-sm text-gray-500 flex-shrink-0 py-5">
-        <div className='flex flex-row items-start justify-around max-w-6xl background-color: #f5f5f5 mx-auto px-2 py-2'>
-                {props.map((item)=>{
-                    return (<div className='items-center gap-2' key={item.footerTitle}>
-                                <h3 className='text-start text-gray-700 font-bold text-lg mb-3'>{item.footerTitle}</h3>
-                                <ul className='flex flex-col items-start gap-2'>
-                                    {item.footerItems.map((footItem)=>{
-                                        return <li key={footItem.itemName}><a href={footItem.linkTo} className='hover:text-blue-500 transition-colors duration-300 ease-in-out'>{footItem.itemName}</a></li>
-                                    })}
-                                </ul>
-                            </div>
-                    )
-                })}
+    <footer className="w-full border-t border-gray-200 bg-gray-50 mt-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
+        {/* Footer columns */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+          {props.map((item) => (
+            <div key={item.footerTitle}>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                {item.footerTitle}
+              </h3>
+              <ul className="flex flex-col gap-2.5">
+                {item.footerItems.map((footItem) => (
+                  <li key={footItem.itemName}>
+                    <a
+                      href={footItem.linkTo}
+                      className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                    >
+                      {footItem.itemName}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <hr className='max-w-5xl mx-auto border-gray my-5' />
-        <div>© Copyright 2069</div>
-        <div>This booking site was developed by h nguyen</div>
 
-
-    </div>
-  )
+        {/* Bottom bar */}
+        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/img/travelbuddy-logo.svg"
+              alt="TravelBuddy"
+              width={120}
+              height={24}
+              className="h-6 w-auto opacity-60"
+            />
+          </div>
+          <p className="text-xs text-gray-400">
+            © {new Date().getFullYear()} TravelBuddy. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
 }

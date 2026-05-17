@@ -2,39 +2,30 @@ const {sql, poolPromise} = require('../config/db');
 const db = require('../config/postgre');
 const { prisma } =  require("../../lib/prisma");
 
-// async function getAllPlaces(){ // MSSQL
-//     const pool = await poolPromise;
-//     const result = await pool.request()
-//         .query("SELECT * FROM Places");
-//     return result.recordset;
-// } MSSQL
-
 async function getAllPlaces() {
     const data = await prisma.place.findMany();
     return data;
 }
 
-async function getPlacesByDestination(destination) {
+async function getPlacesByDestination(slug) {
     const data = await prisma.place.findMany({
-        where:{
-            destination_id: destination
+        where: {
+            slug: slug
         }
     });
     return data;
 }
 
-async function getPlaceById(place_id){
+async function getPlaceById(place_id) {
     try {
-        const id = parseInt(place_id);
         const result = await prisma.place.findUnique({
             where: {
-                place_id: id
+                place_id: place_id
             }
         });
-    return result;
+        return result;
     } catch (error) {
         throw new Error("Place not found");
-        return null;
     }
 }
 
@@ -45,7 +36,7 @@ async function getPlacesLimit(limit) {
     return result;
 }
 
-async function createNewPlace({name, description, address, city, country, category, image_url, average_rating}){
+async function createNewPlace({name, description, address, city, country, slug, image_url, average_rating}) {
     const result = await prisma.place.create({
         data: {
             name,
@@ -53,7 +44,7 @@ async function createNewPlace({name, description, address, city, country, catego
             address,
             city,
             country,
-            category,
+            slug,
             image_url,
             average_rating
         }
@@ -63,10 +54,9 @@ async function createNewPlace({name, description, address, city, country, catego
 
 async function deletePlace(place_id) {
     try {
-        const id = parseInt(place_id);
         const result = await prisma.place.delete({
             where: {
-                place_id: id
+                place_id: place_id
             }
         });
         return result;
@@ -76,12 +66,11 @@ async function deletePlace(place_id) {
 }
 
 
-async function updatePlace(place_id, {name, description, address, city, country, category, image_url, average_rating}) {
+async function updatePlace(place_id, {name, description, address, city, country, slug, image_url, average_rating}) {
     try {
-        const id = parseInt(place_id);
         const result = await prisma.place.update({
             where: {
-                place_id: id
+                place_id: place_id
             },
             data: {
                 name,
@@ -89,7 +78,7 @@ async function updatePlace(place_id, {name, description, address, city, country,
                 address,
                 city,
                 country,
-                category,
+                slug,
                 image_url,
                 average_rating
             }

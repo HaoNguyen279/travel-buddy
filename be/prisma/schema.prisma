@@ -60,8 +60,7 @@ model Place {
   address    String
   city       String
   country    String
-  destination_id String?
-  category   String
+  slug String?
   image_url String?
   average_rating Float @default(0)
   createdAt   DateTime @default(now())
@@ -69,7 +68,7 @@ model Place {
   posts Post[]
   favorites Favorite[]
   tours Tour[]
-  deletedAt DateTime  @db.Timestamp(6)
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 model Category{
   category_id String @id @default(uuid()) @db.Uuid()
@@ -138,7 +137,7 @@ model Comment {
   created_at DateTime @default(now())
   author User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-  deletedAt DateTime  @db.Timestamp(6)
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 
 model Rating {
@@ -156,7 +155,7 @@ model Rating {
 model Favorite {
   user_id String @db.Uuid()
   place_id String @db.Uuid()
-  saved_at DateTime @default(now())
+  saved_at DateTime @default(now()) 
   @@id([user_id, place_id])
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
