@@ -9,12 +9,10 @@ import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
 import TravelSearch from "@/components/ui/TravelSearch";
 
-/* ─── Data ──────────────────────────────────────────────────────── */
-
-
 
 const experiences = [
   {
+    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
     imgUrl: "https://oldquartertravel.com/wp-content/uploads/2018/08/sapa-trekking-3d2n.jpg",
     title: "Sapa Trekking Homestay - View thung lũng Mường Hoa",
     type: "Homestay",
@@ -29,6 +27,7 @@ const experiences = [
     isGenius: true,
   },
   {
+    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
     imgUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=800",
     title: "Phu Quoc Luxury Emerald Bay Resort & Spa",
     type: "Resort",
@@ -43,6 +42,7 @@ const experiences = [
     isGenius: true,
   },
   {
+    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
     imgUrl: "https://cdn.justfly.vn/1500x1000/media/73/11/f365-0a52-4b0a-b249-fb2cd8a1dc62.jpg",
     title: "Hanoi Old Quarter Boutique Hotel - Gần Hồ Gươm",
     type: "Khách sạn",
@@ -57,6 +57,7 @@ const experiences = [
     isGenius: false,
   },
   {
+    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
     imgUrl: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?q=80&w=800",
     title: "Dalat Pine Villa - Biệt thự gỗ giữa rừng thông",
     type: "Villa",
@@ -71,6 +72,7 @@ const experiences = [
     isGenius: true,
   },
   {
+    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
     imgUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800",
     title: "Hoi An Riverside Heritage - Phố cổ lung linh",
     type: "Boutique Hotel",
@@ -85,6 +87,7 @@ const experiences = [
     isGenius: true,
   },
   {
+    tour_id : "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
     imgUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=800",
     title: "Vung Tau Sea View Apartment - Căn hộ hướng biển",
     type: "Căn hộ",
@@ -183,7 +186,6 @@ const dataFooter = [
   },
 ];
 
-/* ─── Page ──────────────────────────────────────────────────────── */
 
 export default function Home() {
   return (
@@ -195,11 +197,10 @@ export default function Home() {
       />
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4 sm:px-6 lg:px-8 py-6">
-        {/* Hero */}
-        <HeroSection
+        {/* <HeroSection
           title="Khám phá Việt Nam cùng Travel Buddy"
           subtitle="Lên kế hoạch, đặt phòng và chia sẻ hành trình du lịch của bạn với cộng đồng hơn 42,000 người dùng."
-        />
+        /> */}
 
         {/* Search */}
         <section className="relative space-y-4">
@@ -245,11 +246,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Why Choose Us */}
-        <WhyChooseUs />
 
-        {/* Newsletter */}
-        <Newsletter />
+        {/* <WhyChooseUs />
+
+
+        <Newsletter /> */}
       </div>
 
       <Footer props={dataFooter} />

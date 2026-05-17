@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { Heart, Star, MapPin } from "lucide-react";
+import Link from "next/link";
 
 type AccommodationCardProps = {
+  tour_id : string;
   imgUrl: string;
   title: string;
   type: string;
@@ -19,6 +21,7 @@ type AccommodationCardProps = {
 };
 
 export function ItemCard({
+  tour_id = "bfbb3ce9-847a-4dc8-ac38-f18362396f9d",
   imgUrl = "https://images.unsplash.com/photo-1555854817-5b2260d15d4d?q=80&w=500",
   title = "SAIGON HOMEY - SOHO RESIDENCE",
   type = "Guesthouse",
@@ -33,7 +36,8 @@ export function ItemCard({
   isGenius = true,
 }: Partial<AccommodationCardProps>) {
   return (
-    <article className="group w-full overflow-hidden bg-white border border-gray-200/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:border-gray-300/80 hover:-translate-y-0.5">
+    <Link href={`/tour/${tour_id}`}>
+      <article className="group w-full overflow-hidden bg-white border border-gray-200/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:border-gray-300/80 hover:-translate-y-0.5">
       {/* Image Section */}
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <Image
@@ -107,5 +111,6 @@ export function ItemCard({
         </div>
       </div>
     </article>
+    </Link>
   );
 }
