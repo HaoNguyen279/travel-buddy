@@ -13,13 +13,14 @@ datasource db {
 }
 
 model User {
-  user_id        String      @id @default(uuid()) @db.Uuid()
-  username       String   @unique
+  user_id String @id  @default(uuid()) @db.Uuid()
+  firebase_uid String? @unique
   email     String   @unique
-  password_hash  String
   full_name     String?
+  phone String?
   avatar_url    String?
   bio           String?
+  refreshTokens RefreshToken[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   posts Post[]
@@ -28,29 +29,97 @@ model User {
   ratings Rating[]
   followers UserFollow[] @relation("user_followers")
   following UserFollow[] @relation("user_following")
+  deletedAt DateTime?  @db.Timestamp(6)
+}
+
+model RefreshToken {
+  token_id BigInt @id @default(autoincrement())
+
+  user_id  String @db.Uuid
+  user     User   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  token_hash String @unique @db.Text
+
+  session_id String  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_agent String? @db.Text
+  ip         String? @db.Inet
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  expires_at DateTime @db.Timestamp(6)
+
+  revoked_at DateTime? @db.Timestamp(6)
+
+  replaced_by_token_id BigInt?
+  replaced_by_token    RefreshToken? @relation("RefreshTokenReplacement", fields: [replaced_by_token_id], references: [token_id], onDelete: SetNull)
+  replaces_tokens      RefreshToken[] @relation("RefreshTokenReplacement")
+
+  @@map("refreshtokens")
 }
 model Place {
-  place_id          Int      @id @default(autoincrement())
-  name        String
+  place_id   String      @id @default(uuid()) @db.Uuid()
+  name       String
   description String?
   address    String
   city       String
   country    String
-  destination_id String?
-  category   String
+  slug String?
   image_url String?
   average_rating Float @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   posts Post[]
-  ratings Rating[]
   favorites Favorite[]
+  tours Tour[]
+  deletedAt DateTime?  @db.Timestamp(6)
+}
+model Category{
+  category_id String @id @default(uuid()) @db.Uuid()
+  name String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tours Tour[]
+  deletedAt DateTime?  @db.Timestamp(6)
+}
+model Tour{
+  tour_id String @id @default(uuid()) @db.Uuid() // @default(uuid()) là của prisma tự gen UUID khi dùng prisma.tour.create()
+  place_id String @db.Uuid() // còn @db.Uuid() là để dữ liệu của field này trong database là UUID. nếu ko có @db.Uuid() thì dữ liệu sẽ là String bình thường
+  category_id String @db.Uuid()
+  name String
+  description String?
+  base_price Float
+  days Int
+  nights Int
+  max_guests Int
+  min_guests Int
+  booking_count Int @default(0)
+  image_url String?
+  ratings Rating[]
+  average_rating Float @default(0)
+  status String @default("available")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
+  category Category @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
+  deletedAt DateTime?  @db.Timestamp(6)
+}
+
+model Promotion {
+  promotion_id String @id @default(uuid()) @db.Uuid()
+  title String
+  description String?
+  discount_percentage Float
+  start_date DateTime
+  end_date DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 
 model Post {
   post_id String @id @default(uuid()) @db.Uuid()
   user_id String @db.Uuid()
-  place_id Int
+  place_id String @db.Uuid()
   content String
   image_url String?
   createdAt DateTime @default(now())
@@ -58,38 +127,41 @@ model Post {
   author User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
   comments Comment[]
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 
 
 model Comment {
-  comment_id Int @id @default(autoincrement())
+  comment_id String @id @default(uuid()) @db.Uuid()
   post_id String @db.Uuid()
   user_id String @db.Uuid()
   comment_text String
   created_at DateTime @default(now())
   author User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 
 model Rating {
-  rating_id Int @id @default(autoincrement())
+  rating_id String @id @default(uuid()) @db.Uuid()
   user_id String @db.Uuid()
-  place_id Int
+  tour_id String @db.Uuid()
   score Int @default(0)
   review String
   created_at DateTime @default(now())
   reviewer User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
+  tour Tour @relation(fields: [tour_id], references: [tour_id], onDelete: Cascade)
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 
 model Favorite {
   user_id String @db.Uuid()
-  place_id Int
-  saved_at DateTime @default(now())
+  place_id String @db.Uuid()
+  saved_at DateTime @default(now()) 
   @@id([user_id, place_id])
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
+  deletedAt DateTime?  @db.Timestamp(6)
 }
 
 model UserFollow {

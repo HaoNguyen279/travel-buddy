@@ -238,6 +238,22 @@ const createNewUser = async (username, email, hashed_password, full_name, avatar
         throw new Error("Error creating new user: " + error.message);
     }
 }
+const createNewGoogleUser = async (firebase_uid, email, full_name, avatar_url, phone) =>{
+    try {
+        const result = await prisma.user.create({
+            data: {
+                firebase_uid:firebase_uid,
+                email: email,
+                full_name: full_name,
+                avatar_url: avatar_url,
+                phone: phone
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error creating new user: " + error.message);
+    }
+}
 
 
 const verifyLoginUser = async (email, text_password) =>{
@@ -260,6 +276,48 @@ const verifyLoginUser = async (email, text_password) =>{
     }
 }
 
+const findUserByUid = async (uid) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                firebase_uid: uid
+            }
+        });
+        return user;
+    } catch (error) {
+            throw new Error("Error finding user by UID: " + error.message);
+    }
+}
+
+const findUserByEmail = async (email) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+        return user;
+    } catch (error) {
+        throw new Error("Error finding user by email: " + error.message);
+    }
+}
+
+const linkUserWithFirebaseUid = async (userId, firebaseUid) => {
+    try {
+        const result = await prisma.user.update({
+            where: {
+                user_id: userId
+            },
+            data: {
+                firebase_uid: firebaseUid
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error linking user with Firebase UID: " + error.message);
+    }
+}
+
 
 
 
@@ -275,5 +333,13 @@ module.exports = {
     createNewUser,
     verifyLoginUser,
     deleteUserById,
-    updateUser
+    updateUser,
+    createNewUser,
+    verifyLoginUser,
+    deleteUserById,
+    updateUser,
+    findUserByUid,
+    findUserByEmail,
+    linkUserWithFirebaseUid,
+    createNewGoogleUser
 }

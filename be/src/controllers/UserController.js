@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const {
     getAllUsers: getAllUsersService,
     getUserById: getUserByIdService,
@@ -11,12 +12,15 @@ const {
     deleteUserById,
     updateUser
 } = require('../services/user.service')
+=======
+const {getAllUsers, getUserById, createNewUser, verifyLoginUser, deleteUserById, updateUser, findUserByUid, findUserByEmail, linkUserWithFirebaseUid, createNewGoogleUser} = require('../services/user.service')
+>>>>>>> 18c69ee5a90ea27ab84a10ae35cabd2d6a24add9
 const {hash_password} = require('../auth/password');
 const {generateAccesssToken, generateRefreshToken} = require('../middlewares/cookiesJwtAuth');
 const { insertRefreshToken } = require('../services/token.service');
 const jwt = require("jsonwebtoken");
 const { json } = require('express');
-
+const admin = require('../config/firebase');
 class UserController{
     async getMe(req, res, next){
         try {
@@ -146,64 +150,110 @@ class UserController{
 
 
     async register(req, res, next){
-        const ud = req.body;
-        console.log("1" + ud);
-        const hashed_password = await hash_password(ud.password);
-        const result = await createNewUser(ud.username, ud.email, hashed_password, ud.fullname, ud.avatar_url, ud.bio);
-        if(result){
-            console.log(ud);
+        try {
+            const { idToken, fullname, phone } = req.body;
+            if(!idToken) {
+                return res.status(400).json({message: "ID token is required"});
+            }
+            // xác thực id token với Firebase Admin SDK
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            const { uid, email, name, picture } = decodedToken;
+
+            const existingByUid = await findUserByUid(uid);
+            if (existingByUid) {
+                return await this.#handleAuthSuccess(res, existingByUid, req);
+            }
+
+            const existingByEmail = await findUserByEmail(email);
+            if (existingByEmail) {
+                const linkedUser = await linkUserWithFirebaseUid(existingByEmail.user_id, uid);
+                return await this.#handleAuthSuccess(res, linkedUser, req);
+            }
+
+            const newUser = await createNewGoogleUser(
+                uid,
+                email,
+                fullname || name || "",
+                picture || null,
+                phone || null
+            );
+            if(newUser){
+                console.log("New user created with Firebase login: ", newUser);
+                return await this.#handleAuthSuccess(res, newUser, req);
+            }
+            return res.status(500).json({message: "Failed to create new user"});
+        } catch (error) {
+            return res.status(400).json({message: "Invalid ID token"});
         }
-        res.json({message: "Create new user endpoint"});
     }
+    async #handleAuthSuccess(res, user, req){
+        const accessToken = generateAccesssToken(user);
+        const refreshToken = generateRefreshToken(user);
+        
+        await insertRefreshToken({
+            userId: user.user_id,
+            refreshToken,
+            userAgent: req.headers["user-agent"],
+            ip: req.ip 
+        });
 
+        // Với localhost HTTP: secure=false, sameSite='lax'
+        // Với production HTTPS: secure=true, sameSite='none'
+        const isProduction = process.env.NODE_ENV === 'production';
+        
+        const cookieOptions1 = {
+            httpOnly: true,
+            secure: isProduction,  // false cho HTTP localhost, true cho HTTPS production
+            sameSite: isProduction ? 'none' : 'lax',  // 'lax' hoạt động với HTTP
+            path: '/'
+        };
+
+        const cookieOptions2 = {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            path: '/auth/refresh'
+        };
+
+        res.cookie("refreshToken", refreshToken, {
+            ...cookieOptions2,
+            maxAge: 1000 * 60 * 60 * 3 // 3 hours
+        });
+        res.cookie("accessToken", accessToken, {
+            ...cookieOptions1,
+            maxAge: 1000 * 60 * 15 // 15 minutes 
+        });
+        return res.json({message : "Login successful", success: true});
+    }
     async login(req, res, next) {
-        const userdata = req.body;
-        console.log("Logged user data :" + userdata.email + " " + userdata.password);
-        const user = await verifyLoginUser(userdata.email, userdata.password);
-        const user_cookie = req.cookies;
-        console.log("User cookie data :" + JSON.stringify(user_cookie));
-        if(user){
-            console.log("User logged in successfully");
-            const accessToken = generateAccesssToken(user);
-            const refreshToken = generateRefreshToken(user);
-            
-            await insertRefreshToken({
-                userId: user.user_id,
-                refreshToken,
-                userAgent: req.headers["user-agent"],
-                ip: req.ip 
-            });
+        try {
+            const { idToken } = req.body;
+            if(!idToken) {
+                return res.status(400).json({message: "ID token is required"});
+            }
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            const { uid, email, name, picture } = decodedToken;
 
-            // Với localhost HTTP: secure=false, sameSite='lax'
-            // Với production HTTPS: secure=true, sameSite='none'
-            const isProduction = process.env.NODE_ENV === 'production';
-            
-            const cookieOptions1 = {
-                httpOnly: true,
-                secure: isProduction,  // false cho HTTP localhost, true cho HTTPS production
-                sameSite: isProduction ? 'none' : 'lax',  // 'lax' hoạt động với HTTP
-                path: '/'
-            };
+            let user = await findUserByUid(uid);
+            if (!user) {
+                const existingByEmail = await findUserByEmail(email);
+                if (existingByEmail) {
+                    user = await linkUserWithFirebaseUid(existingByEmail.user_id, uid);
+                } else {
+                    user = await createNewGoogleUser(
+                        uid,
+                        email,
+                        name || "",
+                        picture || null,
+                        null
+                    );
+                }
+            }
 
-            const cookieOptions2 = {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: isProduction ? 'none' : 'lax',
-                path: '/auth/refresh'
-            };
-
-            res.cookie("refreshToken", refreshToken, {
-                ...cookieOptions2,
-                maxAge: 1000 * 60 * 60 * 3 // 3 hours
-            });
-            res.cookie("accessToken", accessToken, {
-                ...cookieOptions1,
-                maxAge: 1000 * 60 * 15 // 15 minutes 
-            });
-            res.json({message : "Login successful" });
-        } else {
-            console.log("Login failed");
-            res.json({message: "Login failed"});
+            return await this.#handleAuthSuccess(res, user, req);
+        } catch (error) {
+            console.log("User login failed", error);
+            return res.status(401).json({message: "Invalid ID token"});
         }
     }
     async refresh(req, res, next){
@@ -250,6 +300,43 @@ class UserController{
         const payload = jwt.verify(request_access_token, process.env.JWT_ACCESS_SECRET);
         
     }
+    
+    // [POST] /auth/google-login
+    async googleLogin(req, res, next){
+        try {
+            const { idToken } = req.body;
+            if(!idToken) {
+                return res.status(400).json({message: "ID token is required"});
+            }
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            const { uid, email, name, picture } = decodedToken;
+
+            let user = await findUserByUid(uid);
+            if (!user) {
+                const existingByEmail = await findUserByEmail(email);
+                if (existingByEmail) {
+                    user = await linkUserWithFirebaseUid(existingByEmail.user_id, uid);
+                } else {
+                    user = await createNewGoogleUser(
+                        uid,
+                        email,
+                        name || "Google User",
+                        picture || null,
+                        null
+                    );
+                }
+            }
+
+            return await this.#handleAuthSuccess(res, user, req);
+        } catch (error) {
+            console.log(error);
+            return res.status(401).json({
+                success: false,
+                message: "Invalid token",
+            });
+        }
+    }
 }
+
 
 module.exports = new UserController;
