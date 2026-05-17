@@ -5,6 +5,7 @@ import { ChevronDown, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import { signOut , getAuth} from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { setUserPresenceState } from '@/features/chat/hooks/usePresence';
 // ai gen UI/tailwindcss, sửa lại handle function các item, 
 type DropdownItem = {
   label: string;
@@ -20,6 +21,18 @@ export default function Dropdown() {
     const router = useRouter();
     const auth = getAuth();
     const handleLogout= async ()=>{
+        const authUser = auth.currentUser;
+        if (authUser) {
+          await setUserPresenceState(
+            {
+              uid: authUser.uid,
+              displayName: authUser.displayName,
+              email: authUser.email,
+              photoURL: authUser.photoURL,
+            },
+            "offline",
+          );
+        }
         await signOut(auth);
         router.replace("/login");
 
@@ -41,7 +54,7 @@ export default function Dropdown() {
       label: 'Thông tin cá nhân',
       icon: <User className="h-4 w-4" />,
       onClick: () => {
-        console.log('Go profile');
+        router.push('/profile');
         setOpen(false);
       },
     },
@@ -58,7 +71,7 @@ export default function Dropdown() {
       icon: <LogOut className="h-4 w-4" />,
       danger: true,
       onClick: () => {
-        handleLogout();
+        void handleLogout();
         setOpen(false);
       },
     },

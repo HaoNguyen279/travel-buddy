@@ -1,36 +1,210 @@
-const e = require('express');
-const {sql, poolPromise} = require('../config/db');
-const db = require('../config/postgre');
 const { verify_password } = require('../auth/password');
 const { prisma } =  require("../../lib/prisma");
+
+function buildUsername(user) {
+    if (user?.email && typeof user.email === "string") {
+        return user.email.split("@")[0];
+    }
+    return String(user?.user_id || "user").slice(0, 8);
+}
+
+const publicUserSelect = {
+    user_id: true,
+    email: true,
+    full_name: true,
+    avatar_url: true,
+    bio: true,
+    createdAt: true,
+    updatedAt: true
+};
+
 async function getAllUsers() {
-    // const pool = await poolPromise;
-    // const result = await pool.request()
-    //     .query('SELECT * FROM Users')
-    // return result.recordset;
-    // const result = await db.query("SELECT * FROM Users");
-    // return result.rows;
     try {
-        const result = await prisma.user.findMany();
-        return result;
+        const users = await prisma.user.findMany({
+            select: publicUserSelect
+        });
+        return users.map((user) => ({
+            ...user,
+            username: buildUsername(user)
+        }));
     } catch (error) {
         throw new Error("Error fetching users: " + error.message);
     }
 }
 
 async function getUserById(id) {
-    // const pool = await poolPromise;
-    // const result = await pool.request()
-    //     .query("SELECT * FROM Users WHERE user_id = ?", [id])
     try {
-        const result = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 user_id: id
-            }        
+            },
+            select: publicUserSelect
         });
-        return result;
+        if (!user) return null;
+        return {
+            ...user,
+            username: buildUsername(user)
+        };
     } catch (error) {
         throw new Error("Error fetching user: " + error.message);
+    }
+}
+
+async function getUserProfileById(targetUserId, viewerUserId = null) {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { user_id: targetUserId },
+            select: publicUserSelect
+        });
+        if (!user) return null;
+
+        const [postsCount, followersRaw, followingRaw, followStateRaw] = await Promise.all([
+            prisma.post.count({ where: { user_id: targetUserId } }),
+            prisma.$queryRaw`
+                SELECT COUNT(*)::int AS count
+                FROM "user_follows"
+                WHERE "following_id" = ${targetUserId}
+            `,
+            prisma.$queryRaw`
+                SELECT COUNT(*)::int AS count
+                FROM "user_follows"
+                WHERE "follower_id" = ${targetUserId}
+            `,
+            viewerUserId
+                ? prisma.$queryRaw`
+                    SELECT EXISTS(
+                        SELECT 1
+                        FROM "user_follows"
+                        WHERE "follower_id" = ${viewerUserId}
+                          AND "following_id" = ${targetUserId}
+                    ) AS is_following
+                `
+                : Promise.resolve([{ is_following: false }])
+        ]);
+
+        return {
+            ...user,
+            username: buildUsername(user),
+            stats: {
+                posts: postsCount,
+                followers: Number(followersRaw?.[0]?.count ?? 0),
+                following: Number(followingRaw?.[0]?.count ?? 0)
+            },
+            is_following: Boolean(followStateRaw?.[0]?.is_following)
+        };
+    } catch (error) {
+        throw new Error("Error fetching user profile: " + error.message);
+    }
+}
+
+async function followUser(followerId, followingId) {
+    if (followerId === followingId) {
+        throw new Error("You cannot follow yourself");
+    }
+
+    try {
+        const targetUser = await prisma.user.findUnique({
+            where: { user_id: followingId },
+            select: { user_id: true }
+        });
+        if (!targetUser) {
+            throw new Error("Target user not found");
+        }
+
+        const inserted = await prisma.$executeRaw`
+            INSERT INTO "user_follows" ("follower_id", "following_id", "created_at")
+            VALUES (${followerId}, ${followingId}, NOW())
+            ON CONFLICT ("follower_id", "following_id") DO NOTHING
+        `;
+
+        return inserted > 0;
+    } catch (error) {
+        throw new Error("Error following user: " + error.message);
+    }
+}
+
+async function unfollowUser(followerId, followingId) {
+    try {
+        const deleted = await prisma.$executeRaw`
+            DELETE FROM "user_follows"
+            WHERE "follower_id" = ${followerId}
+              AND "following_id" = ${followingId}
+        `;
+        return deleted > 0;
+    } catch (error) {
+        throw new Error("Error unfollowing user: " + error.message);
+    }
+}
+
+async function getFollowersByUserId(userId, limit = 20, offset = 0) {
+    try {
+        const [items, totalRaw] = await Promise.all([
+            prisma.$queryRaw`
+                SELECT
+                    u."user_id",
+                    u."email",
+                    u."full_name",
+                    u."avatar_url",
+                    uf."created_at"
+                FROM "user_follows" uf
+                JOIN "User" u ON u."user_id" = uf."follower_id"
+                WHERE uf."following_id" = ${userId}
+                ORDER BY uf."created_at" DESC
+                LIMIT ${limit}
+                OFFSET ${offset}
+            `,
+            prisma.$queryRaw`
+                SELECT COUNT(*)::int AS count
+                FROM "user_follows"
+                WHERE "following_id" = ${userId}
+            `
+        ]);
+
+        return {
+            items: items.map((item) => ({
+                ...item,
+                username: item.email ? String(item.email).split("@")[0] : String(item.user_id).slice(0, 8)
+            })),
+            total: Number(totalRaw?.[0]?.count ?? 0)
+        };
+    } catch (error) {
+        throw new Error("Error fetching followers: " + error.message);
+    }
+}
+
+async function getFollowingByUserId(userId, limit = 20, offset = 0) {
+    try {
+        const [items, totalRaw] = await Promise.all([
+            prisma.$queryRaw`
+                SELECT
+                    u."user_id",
+                    u."email",
+                    u."full_name",
+                    u."avatar_url",
+                    uf."created_at"
+                FROM "user_follows" uf
+                JOIN "User" u ON u."user_id" = uf."following_id"
+                WHERE uf."follower_id" = ${userId}
+                ORDER BY uf."created_at" DESC
+                LIMIT ${limit}
+                OFFSET ${offset}
+            `,
+            prisma.$queryRaw`
+                SELECT COUNT(*)::int AS count
+                FROM "user_follows"
+                WHERE "follower_id" = ${userId}
+            `
+        ]);
+
+        return {
+            items: items.map((item) => ({
+                ...item,
+                username: item.email ? String(item.email).split("@")[0] : String(item.user_id).slice(0, 8)
+            })),
+            total: Number(totalRaw?.[0]?.count ?? 0)
+        };
+    } catch (error) {
+        throw new Error("Error fetching following list: " + error.message);
     }
 }
 
@@ -171,6 +345,15 @@ const linkUserWithFirebaseUid = async (userId, firebaseUid) => {
 module.exports = {
     getAllUsers,
     getUserById,
+    getUserProfileById,
+    followUser,
+    unfollowUser,
+    getFollowersByUserId,
+    getFollowingByUserId,
+    createNewUser,
+    verifyLoginUser,
+    deleteUserById,
+    updateUser,
     createNewUser,
     verifyLoginUser,
     deleteUserById,

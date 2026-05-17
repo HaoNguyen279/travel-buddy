@@ -10,12 +10,12 @@ const postRouter = require('./routes/post.route');
 const tourRouter = require('./routes/tour.route');
 // CORS policy
 app.use(cors({
-  origin: 'http://localhost:3001',
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true
 }));
 
 // lấy db từ file config pool connection 
-const db = require('../src/config/postgre');
+const db = require('../src/config/supabasepg');
 app.use(express.json()); // parse JSON khi get data từ BODY của POST request
 
 app.use(cookieParser());
