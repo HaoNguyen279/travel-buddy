@@ -1,17 +1,79 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
+import api from "@/services/api";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
+type TourRating = {
+  rating_id: string;
+  score: number;
+  review?: string | null;
+  created_at?: string | null;
+  reviewer?: {
+    full_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+};
+
+type TourPost = {
+  post_id?: string;
+  title?: string | null;
+  content?: string | null;
+  created_at?: string | null;
+  author?: {
+    full_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  comments?: Array<unknown>;
+};
+
+type RelatedTour = {
+  tour_id: string;
+  name: string;
+  base_price: number;
+  image_url?: string | null;
+  average_rating: number;
+  ratings?: Array<{ score: number }>;
+  place?: {
+    name?: string | null;
+  } | null;
+  category?: {
+    name?: string | null;
+  } | null;
+};
+
+type Tour = {
+  tour_id: string;
+  name: string;
+  description?: string | null;
+  base_price: number;
+  days: number;
+  nights: number;
+  booking_count: number;
+  image_url?: string | null;
+  average_rating: number;
+  ratings?: Array<TourRating>;
+  place?: {
+    name?: string | null;
+    posts?: Array<TourPost>;
+    favorites?: Array<unknown>;
+    tours?: Array<RelatedTour>;
+  } | null;
+  category?: {
+    name?: string | null;
+    tours?: Array<RelatedTour>;
+  } | null;
+};
+
 const navProps = {
   webName: "TravelBuddy",
-  subtitle: "Dat cho, kham pha va len ke hoach cho chuyen di cua ban",
+  subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
   itemOnNav: [
     {
       itemName: "Post",
@@ -74,178 +136,6 @@ const dataFooter = [
   },
 ];
 
-const itineraryTabs = [
-  {
-    dayLabel: "Ngay 1",
-    shortTitle: "Di chuyen va check-in",
-    slots: [
-      {
-        period: "Sang",
-        time: "07:30 - 11:30",
-        content:
-          "Don tai diem hen trung tam, khoi hanh bang limousine, nghi giua chang va den Sa Pa vao cuoi buoi sang.",
-      },
-      {
-        period: "Trua",
-        time: "11:30 - 14:00",
-        content:
-          "An trua mon dia phuong, nhan phong homestay va nghi ngoi ngan truoc khi bat dau tham quan.",
-      },
-      {
-        period: "Chieu",
-        time: "14:00 - 18:00",
-        content:
-          "Tham quan ban Cat Cat, check-in cac diem view nui, dung ca phe va quay ve homestay.",
-      },
-    ],
-  },
-  {
-    dayLabel: "Ngay 2",
-    shortTitle: "Trekking va trai nghiem dia phuong",
-    slots: [
-      {
-        period: "Sang",
-        time: "06:30 - 11:00",
-        content:
-          "An sang, bat dau trekking Muong Hoa, di qua ruong bac thang va cac diem nhin toan canh.",
-      },
-      {
-        period: "Trua",
-        time: "11:30 - 13:30",
-        content:
-          "Dung bua trua tai ban Lao Chai, nghi chan va giao luu van hoa cung nguoi ban dia.",
-      },
-      {
-        period: "Chieu",
-        time: "13:30 - 17:30",
-        content:
-          "Di tiep den Ta Van, workshop nho ve det tho cam va quay lai homestay thu gian.",
-      },
-    ],
-  },
-  {
-    dayLabel: "Ngay 3",
-    shortTitle: "San may va ket thuc tour",
-    slots: [
-      {
-        period: "Sang",
-        time: "05:30 - 09:00",
-        content:
-          "Don binh minh tai diem san may, chup anh, ve homestay an sang va thu xep hanh ly.",
-      },
-      {
-        period: "Trua",
-        time: "09:00 - 12:30",
-        content:
-          "Tu do mua sam dac san, tra phong va tap trung tai diem hen de khoi hanh ve lai Ha Noi.",
-      },
-      {
-        period: "Chieu",
-        time: "12:30 - 17:30",
-        content:
-          "Di chuyen ve Ha Noi, tra khach tai diem hen ban dau va ket thuc chuong trinh.",
-      },
-    ],
-  },
-];
-
-const benefits = [
-  "Xe dua don 2 chieu tu trung tam",
-  "2 dem luu tru + an sang",
-  "Huong dan vien tieng Viet",
-  "Bao hiem du lich co ban",
-  "Anh chup check-in theo nhom",
-  "Ho tro hotline 24/7",
-];
-
-const reviewTags = [
-  "Tat ca",
-  "Amazing sights",
-  "Informative experience",
-  "Great guides",
-  "Points of interest",
-];
-
-const reviewsData = [
-  {
-    id: "rv1",
-    name: "nicola_c",
-    month: "Feb 2026",
-    rating: 4.9,
-    tags: ["Amazing sights", "Great guides"],
-    content:
-      "Enjoyed every part of this trip. The guide was very knowledgeable, the weather was clear, and every stop had enough time to explore.",
-  },
-  {
-    id: "rv2",
-    name: "candace_c",
-    month: "Apr 2026",
-    rating: 5,
-    tags: ["Informative experience", "Great guides"],
-    content:
-      "Absolutely incredible day. Views were magical and our guide shared local stories that made the route feel much more meaningful.",
-  },
-  {
-    id: "rv3",
-    name: "minh_anh",
-    month: "Mar 2026",
-    rating: 4.8,
-    tags: ["Points of interest", "Amazing sights"],
-    content:
-      "Lich trinh hop ly, khong bi gap. Dac biet thich phan check-in ruong bac thang va cac diem dung ngắm canh.",
-  },
-  {
-    id: "rv4",
-    name: "thanh_truc",
-    month: "Jan 2026",
-    rating: 4.6,
-    tags: ["Informative experience"],
-    content:
-      "Huong dan vien nhiet tinh, support tot cho nguoi di lan dau. Co mot vai diem dung co the o lau hon nhung tong the rat on.",
-  },
-  {
-    id: "rv5",
-    name: "quang_huy",
-    month: "May 2026",
-    rating: 4.7,
-    tags: ["Great guides", "Points of interest"],
-    content:
-      "Nhom minh 5 nguoi di rat thoai mai. Xe don dung gio, bua trua ngon, va timeline tung buoi duoc thong bao ro rang.",
-  },
-];
-
-const relatedTours = [
-  {
-    id: "ha-giang-loop-3n2d",
-    title: "Ha Giang Loop 3N2D - Pass & River View",
-    location: "Ha Giang, Viet Nam",
-    rating: 4.8,
-    reviews: 1186,
-    oldPrice: "3.190.000",
-    newPrice: "2.490.000",
-    imageUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1200",
-  },
-  {
-    id: "ninh-binh-day-tour",
-    title: "Ninh Binh Day Tour - Trang An & Mua Cave",
-    location: "Ninh Binh, Viet Nam",
-    rating: 4.7,
-    reviews: 764,
-    oldPrice: "1.850.000",
-    newPrice: "1.390.000",
-    imageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200",
-  },
-  {
-    id: "da-lat-cloud-hunting",
-    title: "Da Lat Cloud Hunting - Sunrise Combo",
-    location: "Da Lat, Viet Nam",
-    rating: 4.9,
-    reviews: 923,
-    oldPrice: "2.250.000",
-    newPrice: "1.740.000",
-    imageUrl: "https://images.unsplash.com/photo-1472396961693-142e6e269027?q=80&w=1200",
-  },
-];
 
 export default function TourDetailPage({ params }: Props) {
   const { id } = React.use(params);
@@ -259,15 +149,33 @@ export default function TourDetailPage({ params }: Props) {
   const [startDate, setStartDate] = useState("2026-05-20");
   const [packageType, setPackageType] = useState<"standard" | "premium">("standard");
   const [note, setNote] = useState("");
-  const [activeDayIndex, setActiveDayIndex] = useState(0);
-  const [activeReviewTag, setActiveReviewTag] = useState("Tat ca");
-  const [reviewPageIndex, setReviewPageIndex] = useState(0);
+  const [tourData, setTourData] = useState<Tour | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const activeDaySchedule = itineraryTabs[activeDayIndex];
+  const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
+  const formatDate = (value?: string | null) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("vi-VN");
+  };
 
+  const getTourData = async () => {
+    try {
+      const res = await api.get(`/tour/${id}`);
+      setTourData(res.data);
+    }catch (error) {
+      console.error("Failed to fetch tour data:", error);
+      setError("Không thể tải thông tin tour. Vui lòng thử lại sau.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const price = useMemo(() => {
-    const adultPrice = packageType === "premium" ? 3290000 : 2790000;
-    const childPrice = packageType === "premium" ? 1990000 : 1590000;
+    const basePrice = tourData?.base_price ?? 2790000;
+    const adultPrice = packageType === "premium" ? basePrice * 1.15 : basePrice;
+    const childPrice = packageType === "premium" ? basePrice * 0.7 : basePrice * 0.6;
     const serviceFee = 120000;
 
     const subtotal = adults * adultPrice + children * childPrice;
@@ -282,33 +190,16 @@ export default function TourDetailPage({ params }: Props) {
     };
   }, [adults, children, packageType]);
 
-  const sortedReviews = useMemo(() => {
-    const filtered =
-      activeReviewTag === "Tat ca"
-        ? reviewsData
-        : reviewsData.filter((review) => review.tags.includes(activeReviewTag));
+  useEffect(() => {
+    getTourData();
+  }, []);
 
-    return [...filtered].sort((a, b) => b.rating - a.rating);
-  }, [activeReviewTag]);
-
-  const reviewPages = useMemo(() => {
-    const chunkSize = 2;
-    const pages: Array<typeof sortedReviews> = [];
-
-    for (let i = 0; i < sortedReviews.length; i += chunkSize) {
-      pages.push(sortedReviews.slice(i, i + chunkSize));
-    }
-
-    return pages.length > 0 ? pages : [[]];
-  }, [sortedReviews]);
-
-  const canGoPrevReview = reviewPageIndex > 0;
-  const canGoNextReview = reviewPageIndex < reviewPages.length - 1;
-
-  const handleChangeReviewTag = (tag: string) => {
-    setActiveReviewTag(tag);
-    setReviewPageIndex(0);
-  };
+  const ratingValue = tourData?.average_rating ?? 9.4;
+  const reviewsCount = tourData?.ratings?.length ?? tourData?.booking_count ?? 215;
+  const place = tourData?.place;
+  const category = tourData?.category;
+  const placeTours = place?.tours?.filter((tour) => tour.tour_id !== tourData?.tour_id) ?? [];
+  const categoryTours = category?.tours?.filter((tour) => tour.tour_id !== tourData?.tour_id) ?? [];
 
   return (
     <main className="min-h-screen bg-white">
@@ -317,239 +208,235 @@ export default function TourDetailPage({ params }: Props) {
       <div className="mx-auto w-full max-w-6xl px-4 pb-14 pt-6 sm:px-6 lg:px-8">
         <div className="mb-5 text-sm text-slate-500">
           <Link href="/" className="hover:text-blue-700">
-            Trang chu
+            Trang chủ
           </Link>
           <span className="px-2">/</span>
-          <span className="text-slate-700">Tour chi tiet</span>
+          <span className="text-slate-700">Tour chi tiết</span>
         </div>
 
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
-            <div>
-              <img
-                src="https://oldquartertravel.com/wp-content/uploads/2018/08/sapa-trekking-3d2n.jpg"
-                alt="Tour cover"
-                className="h-full min-h-[320px] w-full object-cover"
-              />
-            </div>
-            <div className="space-y-5 p-6 lg:p-8">
-              <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
-                Tour 3 ngay 2 dem
-              </span>
-              <h1 className="text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
-                {prettyTitle || "Sapa Trekking Homestay"}
-              </h1>
-              <p className="text-sm leading-7 text-slate-600 sm:text-base">
-                Tour chi tiet danh cho nhom nho va cap doi, ket hop trekking nhe, luu tru homestay va trai nghiem van hoa ban dia.
-              </p>
+          {isLoading && (
+            <div className="p-6 text-sm text-slate-500">Đang tải thông tin tour...</div>
+          )}
+          {!isLoading && error && (
+            <div className="p-6 text-sm text-red-600">{error}</div>
+          )}
+          {!isLoading && !error && (
+            <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
+              <div>
+                <img
+                  src={
+                    tourData?.image_url ??
+                    "https://oldquartertravel.com/wp-content/uploads/2018/08/sapa-trekking-3d2n.jpg"
+                  }
+                  alt="Tour cover"
+                  className="h-full min-h-[320px] w-full object-cover"
+                />
+              </div>
+              <div className="space-y-5 p-6 lg:p-8">
+                <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                  Tour {tourData?.days ?? 3} ngày {tourData?.nights ?? 2} đêm
+                </span>
+                <h1 className="text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
+                  {tourData?.name || "Sapa Trekking Homestay"}
+                </h1>
+                <p className="text-sm leading-7 text-slate-600 sm:text-base">
+                  {tourData?.description ??
+                    "Tour chi tiết dành cho nhóm nhỏ và cặp đôi, kết hợp trekking nhẹ, lưu trú homestay và trải nghiệm văn hóa bản địa."}
+                </p>
 
-              <div className="grid grid-cols-2 gap-3">
-                <article className="rounded-2xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Danh gia</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">9.4/10 (215 review)</p>
-                </article>
-                <article className="rounded-2xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Khoi hanh</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">Hang ngay</p>
-                </article>
-                <article className="rounded-2xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Diem den</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">Sa Pa, Lao Cai</p>
-                </article>
-                <article className="rounded-2xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Do kho</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">De - Trung binh</p>
-                </article>
+                <div className="grid grid-cols-2 gap-3">
+                  <article className="rounded-2xl border border-slate-200 p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Đánh giá</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">
+                      {ratingValue.toFixed(1)}/10 ({reviewsCount} đánh giá)
+                    </p>
+                  </article>
+                  <article className="rounded-2xl border border-slate-200 p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Điểm đến</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">
+                      {tourData?.place?.name ?? "Sa Pa, Lao Cai"}
+                    </p>
+                  </article>
+                  <article className="rounded-2xl border border-slate-200 p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Danh mục</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">
+                      {tourData?.category?.name ?? "Tour"}
+                    </p>
+                  </article>
+                  <article className="rounded-2xl border border-slate-200 p-3">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Giá cơ bản</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">
+                      {formatCurrency(tourData?.base_price ?? 0)} VND
+                    </p>
+                  </article>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </section>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.45fr_0.55fr]">
           <div className="space-y-8">
             <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Tong quan tour</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Tổng quan tour</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-                Lich trinh toi uu cho 3 ngay 2 dem, vua du thoi gian de kham pha canh dep Sa Pa, vua dam bao nghi ngoi hop ly.
-                Tour phu hop cho nguoi lan dau den Tay Bac va mong muon di theo nhom nho co huong dan vien.
+                {tourData?.description ??
+                  "Lịch trình tối ưu cho 3 ngày 2 đêm, vừa đủ thời gian để khám phá cảnh đẹp Sa Pa, vừa đảm bảo nghỉ ngơi hợp lý. Tour phù hợp cho người lần đầu đến Tây Bắc và mong muốn đi theo nhóm nhỏ có hướng dẫn viên."}
               </p>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Lich trinh chi tiet</h2>
-              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-2">
-                <div className="grid grid-cols-3 gap-2">
-                  {itineraryTabs.map((day, index) => (
-                    <button
-                      key={day.dayLabel}
-                      type="button"
-                      onClick={() => setActiveDayIndex(index)}
-                      className={`rounded-xl px-3 py-3 text-left transition ${
-                        activeDayIndex === index
-                          ? "bg-blue-700 text-white shadow-sm"
-                          : "bg-white text-slate-700 hover:bg-blue-50"
-                      }`}
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-wide">{day.dayLabel}</p>
-                      <p className="mt-1 text-sm font-medium">{day.shortTitle}</p>
-                    </button>
-                  ))}
+            {!isLoading && !error && place && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-xl font-semibold text-slate-900">Thông tin điểm đến</h2>
+                  <p className="text-sm text-slate-500">
+                    {place.posts?.length ?? 0} bài viết · {place.favorites?.length ?? 0} lượt yêu thích
+                  </p>
                 </div>
-              </div>
 
-              <div className="mt-5 space-y-3">
-                {activeDaySchedule.slots.map((slot) => (
-                  <article key={`${activeDaySchedule.dayLabel}-${slot.period}`} className="rounded-2xl border border-slate-200 p-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{slot.period}</p>
-                      <p className="text-sm font-medium text-slate-500">{slot.time}</p>
-                    </div>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">{slot.content}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
+                {place.posts && place.posts.length > 0 && (
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {place.posts.slice(0, 4).map((post, index) => (
+                      <article key={post.post_id ?? index} className="rounded-2xl border border-slate-200 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Bài viết nổi bật</p>
+                        <h3 className="mt-2 text-base font-semibold text-slate-900">
+                          {post.title ?? "Chia sẻ hành trình"}
+                        </h3>
+                        {post.content && (
+                          <p className="mt-2 line-clamp-3 text-sm text-slate-600">{post.content}</p>
+                        )}
+                        <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                          <span>{post.author?.full_name ?? "TravelBuddy"}</span>
+                          <span>
+                            {formatDate(post.created_at)} · {post.comments?.length ?? 0} bình luận
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Dich vu bao gom</h2>
-              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                {benefits.map((item) => (
-                  <li key={item} className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Chinh sach tour</h2>
-              <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-                <p>- Huy truoc 7 ngay: hoan 100% gia tri don.</p>
-                <p>- Huy truoc 3-6 ngay: hoan 50% gia tri don.</p>
-                <p>- Huy trong 48h truoc khoi hanh: khong hoan phi.</p>
-                <p>- Tre em duoi 5 tuoi: mien phi (ngu chung voi bo me).</p>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-xl font-semibold text-slate-900">Why travelers loved this</h2>
-                <p className="text-sm font-semibold text-slate-700">4.5 · 5,305 reviews</p>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {reviewTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => handleChangeReviewTag(tag)}
-                    className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                      activeReviewTag === tag
-                        ? "border-emerald-200 bg-emerald-100 text-emerald-900"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-5 overflow-hidden">
-                <div
-                  className="flex transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${reviewPageIndex * 100}%)` }}
-                >
-                  {reviewPages.map((page, pageIndex) => (
-                    <div key={`review-page-${pageIndex}`} className="grid w-full shrink-0 grid-cols-1 gap-4 md:grid-cols-2">
-                      {page.map((review) => (
-                        <article
-                          key={review.id}
-                          className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-sm"
+            {!isLoading && !error && placeTours.length > 0 && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <h2 className="text-xl font-semibold text-slate-900">Tour khác tại {place?.name}</h2>
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {placeTours.slice(0, 4).map((tour) => (
+                    <article key={tour.tour_id} className="overflow-hidden rounded-2xl border border-slate-200">
+                      <img
+                        src={
+                          tour.image_url ??
+                          "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200"
+                        }
+                        alt={tour.name}
+                        className="h-40 w-full object-cover"
+                      />
+                      <div className="space-y-2 p-4">
+                        <h3 className="text-base font-semibold text-slate-900">{tour.name}</h3>
+                        <p className="text-sm text-slate-500">
+                          {tour.category?.name ?? "Tour"} · {tour.place?.name ?? ""}
+                        </p>
+                        <p className="text-sm text-emerald-700">
+                          ★ {tour.average_rating.toFixed(1)} ({tour.ratings?.length ?? 0} đánh giá)
+                        </p>
+                        <p className="text-lg font-semibold text-slate-900">
+                          {formatCurrency(tour.base_price)} VND
+                        </p>
+                        <Link
+                          href={`/tour/${tour.tour_id}`}
+                          className="inline-flex rounded-full bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-800"
                         >
-                          <div className="flex items-center gap-2 text-emerald-600">
-                            <span className="text-sm">★★★★★</span>
-                          </div>
-                          <p className="mt-2 text-sm text-slate-500">
-                            {review.name} · {review.month}
-                          </p>
-                          <p className="mt-3 text-sm leading-7 text-slate-700">{review.content}</p>
-                        </article>
-                      ))}
-                    </div>
+                          Xem tour
+                        </Link>
+                      </div>
+                    </article>
                   ))}
                 </div>
-              </div>
+              </section>
+            )}
 
-              <div className="mt-4 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => canGoPrevReview && setReviewPageIndex((prev) => prev - 1)}
-                  disabled={!canGoPrevReview}
-                  className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Truoc
-                </button>
-                <button
-                  type="button"
-                  onClick={() => canGoNextReview && setReviewPageIndex((prev) => prev + 1)}
-                  disabled={!canGoNextReview}
-                  className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Tiep
-                </button>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Explore our promoted experiences</h2>
-              <p className="mt-1 text-sm text-slate-500">Nhung tour lien quan duoc khach du lich quan tam cung hanh trinh nay.</p>
-
-              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-                {relatedTours.map((tour) => (
-                  <article
-                    key={tour.id}
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
-                  >
-                    <div className="relative">
-                      <img src={tour.imageUrl} alt={tour.title} className="h-44 w-full object-cover" />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700"
-                      >
-                        ♡
-                      </button>
-                    </div>
-
-                    <div className="space-y-2 p-4">
-                      <p className="text-xs text-slate-500">{tour.location}</p>
-                      <h3 className="line-clamp-2 text-base font-semibold text-slate-900">{tour.title}</h3>
-                      <p className="text-sm text-emerald-700">★ {tour.rating} ({tour.reviews})</p>
-
-                      <div className="pt-1">
-                        <p className="text-sm text-slate-400 line-through">from {tour.oldPrice} VND</p>
-                        <p className="text-xl font-bold text-slate-900">from {tour.newPrice} VND</p>
+            {!isLoading && !error && categoryTours.length > 0 && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <h2 className="text-xl font-semibold text-slate-900">Tour cùng danh mục</h2>
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {categoryTours.slice(0, 4).map((tour) => (
+                    <article key={tour.tour_id} className="rounded-2xl border border-slate-200 p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-semibold text-slate-900">{tour.name}</h3>
+                          <p className="text-sm text-slate-500">{tour.place?.name ?? ""}</p>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {formatCurrency(tour.base_price)} VND
+                        </p>
                       </div>
-
+                      <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
+                        <span>★ {tour.average_rating.toFixed(1)}</span>
+                        <span>{tour.ratings?.length ?? 0} đánh giá</span>
+                      </div>
                       <Link
-                        href={`/tour/${tour.id}`}
-                        className="mt-1 inline-flex rounded-full bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-800"
+                        href={`/tour/${tour.tour_id}`}
+                        className="mt-3 inline-flex rounded-full border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                       >
                         Xem tour
                       </Link>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {!isLoading && !error && tourData?.ratings && tourData.ratings.length > 0 && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-xl font-semibold text-slate-900">Đánh giá gần đây</h2>
+                  <p className="text-sm text-slate-500">{tourData.ratings.length} đánh giá</p>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {tourData.ratings.slice(0, 6).map((rating) => (
+                    <article key={rating.rating_id} className="rounded-2xl border border-slate-200 p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {rating.reviewer?.full_name ?? "Khách du lịch"}
+                        </p>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          {rating.score}/5
+                        </span>
+                      </div>
+                      {rating.review && (
+                        <p className="mt-2 text-sm text-slate-600">{rating.review}</p>
+                      )}
+                      {rating.created_at && (
+                        <p className="mt-3 text-xs text-slate-500">{formatDate(rating.created_at)}</p>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 className="text-xl font-semibold text-slate-900">Chính sách tour</h2>
+              <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                <p>- Hủy trước 7 ngày: hoàn 100% giá trị đơn.</p>
+                <p>- Hủy trước 3-6 ngày: hoàn 50% giá trị đơn.</p>
+                <p>- Hủy trong 48h trước khởi hành: không hoàn phí.</p>
+                <p>- Trẻ em dưới 5 tuổi: miễn phí (ngủ chung với bố mẹ).</p>
               </div>
             </section>
+
           </div>
 
           <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6">
-            <h2 className="text-xl font-semibold text-slate-900">Dat tour</h2>
-            <p className="mt-1 text-sm text-slate-500">Xac nhan nhanh trong 30 phut</p>
+            <h2 className="text-xl font-semibold text-slate-900">Đặt tour</h2>
+            <p className="mt-1 text-sm text-slate-500">Xác nhận nhanh trong 30 phút</p>
 
             <div className="mt-5 space-y-4">
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-slate-700">Ngay khoi hanh</span>
+                <span className="mb-1 block text-sm font-medium text-slate-700">Ngày khởi hành</span>
                 <input
                   type="date"
                   value={startDate}
@@ -559,20 +446,20 @@ export default function TourDetailPage({ params }: Props) {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-slate-700">Goi tour</span>
+                <span className="mb-1 block text-sm font-medium text-slate-700">Gói tour</span>
                 <select
                   value={packageType}
                   onChange={(e) => setPackageType(e.target.value as "standard" | "premium")}
                   className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 >
-                  <option value="standard">Standard - lich trinh co ban</option>
-                  <option value="premium">Premium - them bua toi dac san + xe rieng</option>
+                  <option value="standard">Standard - lịch trình cơ bản</option>
+                  <option value="premium">Premium - thêm bữa tối đặc sản + xe riêng</option>
                 </select>
               </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Nguoi lon</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Người lớn</p>
                   <div className="mt-2 flex items-center justify-between">
                     <button
                       type="button"
@@ -593,7 +480,7 @@ export default function TourDetailPage({ params }: Props) {
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Tre em</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Trẻ em</p>
                   <div className="mt-2 flex items-center justify-between">
                     <button
                       type="button"
@@ -615,11 +502,11 @@ export default function TourDetailPage({ params }: Props) {
               </div>
 
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-slate-700">Yeu cau them</span>
+                <span className="mb-1 block text-sm font-medium text-slate-700">Yêu cầu thêm</span>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Vi du: an chay, ghe em be, phong rieng..."
+                  placeholder="Ví dụ: ăn chay, ghế em bé, phòng riêng..."
                   className="min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </label>
@@ -627,20 +514,20 @@ export default function TourDetailPage({ params }: Props) {
 
             <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm">
               <div className="flex items-center justify-between text-slate-600">
-                <span>{adults} nguoi lon</span>
+                <span>{adults} người lớn</span>
                 <span>{price.adultPrice.toLocaleString("vi-VN")} VND</span>
               </div>
               <div className="mt-2 flex items-center justify-between text-slate-600">
-                <span>{children} tre em</span>
+                <span>{children} trẻ em</span>
                 <span>{price.childPrice.toLocaleString("vi-VN")} VND</span>
               </div>
               <div className="mt-2 flex items-center justify-between text-slate-600">
-                <span>Phi dich vu</span>
+                <span>Phí dịch vụ</span>
                 <span>{price.serviceFee.toLocaleString("vi-VN")} VND</span>
               </div>
               <div className="my-3 border-t border-slate-200" />
               <div className="flex items-center justify-between text-base font-semibold text-slate-900">
-                <span>Tong tam tinh</span>
+                <span>Tổng tạm tính</span>
                 <span>{price.total.toLocaleString("vi-VN")} VND</span>
               </div>
             </div>
@@ -649,10 +536,10 @@ export default function TourDetailPage({ params }: Props) {
               type="button"
               className="mt-5 w-full rounded-xl bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
             >
-              Dat tour ngay
+              Đặt tour ngay
             </button>
 
-            <p className="mt-3 text-center text-xs text-slate-500">Khong tru tien ngay. Ban co the huy mien phi theo chinh sach.</p>
+            <p className="mt-3 text-center text-xs text-slate-500">Không trừ tiền ngay. Bạn có thể hủy miễn phí theo chính sách.</p>
           </aside>
         </div>
       </div>

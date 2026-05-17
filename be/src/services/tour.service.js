@@ -73,17 +73,141 @@ async function getToursByCategory(category_id) {
 }
 
 async function getTourById(tour_id) {
-    const data = await prisma.tour.findUnique({
-        where: {
-            tour_id: tour_id
-        },
+  if (!tour_id) throw new Error("tour_id is required");
+
+  const tour = await prisma.tour.findFirst({
+    where: {
+      tour_id,
+      deletedAt: null,
+    },
+    include: {
+      // to-one: KHÔNG được where
+      place: {
         include: {
-            place: true,
-            category: true,
-            ratings: true
-        }
-    });
-    return data;
+          posts: {
+            where: { deletedAt: null },
+            include: {
+              author: {
+                select: {
+                  user_id: true,
+                  email: true,
+                  full_name: true,
+                  phone: true,
+                  avatar_url: true,
+                  bio: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  deletedAt: true,
+                },
+              },
+              comments: {
+                where: { deletedAt: null },
+                include: {
+                  author: {
+                    select: {
+                      user_id: true,
+                      email: true,
+                      full_name: true,
+                      avatar_url: true,
+                      createdAt: true,
+                      updatedAt: true,
+                      deletedAt: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+
+          favorites: {
+            where: { deletedAt: null },
+            include: {
+              user: {
+                select: {
+                  user_id: true,
+                  email: true,
+                  full_name: true,
+                  avatar_url: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  deletedAt: true,
+                },
+              },
+            },
+          },
+
+          tours: {
+            where: { deletedAt: null },
+            include: {
+              category: true,
+              ratings: {
+                where: { deletedAt: null },
+                select: {
+                  rating_id: true,
+                  score: true,
+                  review: true,
+                  created_at: true,
+                  user_id: true,
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // to-one: KHÔNG được where
+      category: {
+        include: {
+          tours: {
+            where: { deletedAt: null },
+            include: {
+              place: true,
+              ratings: {
+                where: { deletedAt: null },
+                select: {
+                  rating_id: true,
+                  score: true,
+                  review: true,
+                  created_at: true,
+                  user_id: true,
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // to-many: dùng where/orderBy OK
+      ratings: {
+        where: { deletedAt: null },
+        orderBy: { created_at: "desc" },
+        include: {
+          reviewer: {
+            select: {
+              user_id: true,
+              firebase_uid: true,
+              email: true,
+              full_name: true,
+              phone: true,
+              avatar_url: true,
+              bio: true,
+              createdAt: true,
+              updatedAt: true,
+              deletedAt: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Nếu bạn muốn loại bỏ tour có place/category đã soft delete:
+  // (vì to-one không filter được bằng include)
+  if (!tour) return null;
+  if (tour.place?.deletedAt) return null;
+  if (tour.category?.deletedAt) return null;
+
+  return tour;
 }
 
 async function createNewTour({place_id, category_id, name, description, base_price, days, nights, max_guests, min_guests, image_url}) {
