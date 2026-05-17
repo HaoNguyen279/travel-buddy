@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
 }
 
 model User {
@@ -26,6 +26,8 @@ model User {
   favorites Favorite[]
   comments Comment[]
   ratings Rating[]
+  followers UserFollow[] @relation("user_followers")
+  following UserFollow[] @relation("user_following")
 }
 model Place {
   place_id          Int      @id @default(autoincrement())
@@ -88,4 +90,17 @@ model Favorite {
   @@id([user_id, place_id])
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   place Place @relation(fields: [place_id], references: [place_id], onDelete: Cascade)
+}
+
+model UserFollow {
+  follower_id  String   @db.Uuid()
+  following_id String   @db.Uuid()
+  created_at   DateTime @default(now())
+  follower     User     @relation("user_following", fields: [follower_id], references: [user_id], onDelete: Cascade)
+  following    User     @relation("user_followers", fields: [following_id], references: [user_id], onDelete: Cascade)
+
+  @@id([follower_id, following_id])
+  @@index([follower_id])
+  @@index([following_id])
+  @@map("user_follows")
 }

@@ -1,4 +1,16 @@
-const {getAllUsers, getUserById, createNewUser, verifyLoginUser, deleteUserById, updateUser} = require('../services/user.service')
+const {
+    getAllUsers: getAllUsersService,
+    getUserById: getUserByIdService,
+    getUserProfileById: getUserProfileByIdService,
+    followUser: followUserService,
+    unfollowUser: unfollowUserService,
+    getFollowersByUserId: getFollowersByUserIdService,
+    getFollowingByUserId: getFollowingByUserIdService,
+    createNewUser,
+    verifyLoginUser,
+    deleteUserById,
+    updateUser
+} = require('../services/user.service')
 const {hash_password} = require('../auth/password');
 const {generateAccesssToken, generateRefreshToken} = require('../middlewares/cookiesJwtAuth');
 const { insertRefreshToken } = require('../services/token.service');
@@ -8,9 +20,9 @@ const { json } = require('express');
 class UserController{
     async getMe(req, res, next){
         try {
-            const {uid} =  req.user;
-            if(!uid) return res.status(400).json({message: "User ID is required"});
-            const data = await getUserById(uid);
+            const userId = req.user?.id;
+            if(!userId) return res.status(400).json({message: "User ID is required"});
+            const data = await getUserByIdService(userId);
             if(!data) return res.status(404).json({message: "User not found"});
             res.status(200).json(data);
         } catch (error) {
@@ -18,25 +30,118 @@ class UserController{
         }
     }
 
+    async getMyProfile(req, res, next){
+        try {
+            const userId = req.user?.id;
+            if(!userId) return res.status(400).json({message: "User ID is required"});
+            const data = await getUserProfileByIdService(userId, userId);
+            if(!data) return res.status(404).json({message: "User not found"});
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
+    }
+
     async getAllUsers(req, res, next){
-        const data = await getAllUsers();
-        res.json(data);
+        try {
+            const data = await getAllUsersService();
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
     }
     async getUserById(req, res, next){
-        const id = req.query.id;
-        const data = await getUserById(id);
-        res.json(data);
+        try {
+            const id = req.params.id;
+            const data = await getUserByIdService(id);
+            if(!data) return res.status(404).json({message: "User not found"});
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
+    }
+    async getUserProfile(req, res, next){
+        try {
+            const targetUserId = req.params.id;
+            const viewerUserId = req.user?.id ?? null;
+            if(!targetUserId) return res.status(400).json({message: "User ID is required"});
+            const data = await getUserProfileByIdService(targetUserId, viewerUserId);
+            if(!data) return res.status(404).json({message: "User not found"});
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
     }
     async deleteUserById(req, res, next){
-        const id = req.params.id;
-        const result = await deleteUserById(id);
-        res.json(result);
+        try {
+            const id = req.params.id;
+            const result = await deleteUserById(id);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
     }
     async updateUser(req, res, next){
-        const userdata = req.body;
-        const result = await updateUser(userdata);
-        res.status(200).json(result);
+        try {
+            const userdata = req.body;
+            const result = await updateUser(userdata);
+            return res.status(200).json(result);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
 
+    }
+
+    async followUser(req, res, next) {
+        try {
+            const followerId = req.user?.id;
+            const followingId = req.params.id;
+            if(!followerId || !followingId){
+                return res.status(400).json({message: "Follower ID and target user ID are required"});
+            }
+            const followed = await followUserService(followerId, followingId);
+            return res.status(200).json({followed});
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
+    }
+
+    async unfollowUser(req, res, next) {
+        try {
+            const followerId = req.user?.id;
+            const followingId = req.params.id;
+            if(!followerId || !followingId){
+                return res.status(400).json({message: "Follower ID and target user ID are required"});
+            }
+            const unfollowed = await unfollowUserService(followerId, followingId);
+            return res.status(200).json({unfollowed});
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
+    }
+
+    async getFollowers(req, res, next) {
+        try {
+            const userId = req.params.id;
+            const limit = Number(req.query.limit ?? 20);
+            const offset = Number(req.query.offset ?? 0);
+            const data = await getFollowersByUserIdService(userId, limit, offset);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
+    }
+
+    async getFollowing(req, res, next) {
+        try {
+            const userId = req.params.id;
+            const limit = Number(req.query.limit ?? 20);
+            const offset = Number(req.query.offset ?? 0);
+            const data = await getFollowingByUserIdService(userId, limit, offset);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
     }
 
 

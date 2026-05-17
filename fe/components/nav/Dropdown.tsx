@@ -54,7 +54,7 @@ export default function Dropdown() {
       label: 'Thông tin cá nhân',
       icon: <User className="h-4 w-4" />,
       onClick: () => {
-        console.log('Go profile');
+        router.push('/profile');
         setOpen(false);
       },
     },

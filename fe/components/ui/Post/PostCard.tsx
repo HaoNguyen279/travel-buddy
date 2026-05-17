@@ -1,31 +1,27 @@
+import type { Post } from "@/services/postService";
 
-type PostCardProps = {
-  post: {
-    post_id: string;
-    user_id: string;
-    createdAt: string;
-    content: string;
-    image_url: string | null;
-    place_id: string;
-  };
-};
-
+type PostCardProps = { post: Post };
 
 export function PostCard({ post }: PostCardProps) {
   const shortUserId = post.user_id.slice(0, 8).toUpperCase();
-  const formattedDate = new Date(post.createdAt).toLocaleString("vi-VN");
+  const displayName =
+    post.author?.full_name ?? post.author?.username ?? `user · ${shortUserId}`;
+  const postDate = post.createdAt ?? post.created_at;
+  const parsedDate = postDate ? new Date(postDate) : null;
+  const formattedDate =
+    parsedDate && !Number.isNaN(parsedDate.getTime())
+      ? parsedDate.toLocaleString("vi-VN")
+      : "Vừa xong";
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-medium">
-          {shortUserId.slice(0, 2)}
+          {displayName.slice(0, 1).toUpperCase()}
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-800">
-            user · {shortUserId}
-          </p>
+          <p className="text-sm font-medium text-gray-800">{displayName}</p>
           <p className="text-xs text-gray-400">{formattedDate}</p>
         </div>
       </div>
@@ -61,7 +57,7 @@ export function PostCard({ post }: PostCardProps) {
               strokeLinejoin="round"
             />
           </svg>
-          no image
+          Không có ảnh
         </div>
       )}
 

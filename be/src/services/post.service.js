@@ -1,18 +1,21 @@
-const {sql, poolPromise} = require('../config/db');
-const db = require('../config/postgre')
 const { prisma } =  require("../../lib/prisma");
+
+const postInclude = {
+    author : {
+        select: {
+            username: true,
+            full_name: true,
+            avatar_url: true
+        }
+    }
+};
 
 async function getAllPosts(){
     try {
-        const result = prisma.post.findMany({
-            include: {
-                author : {
-                    select: {
-                        username: true,
-                        full_name: true,
-                        avatar_url: true
-                    }
-                }
+        const result = await prisma.post.findMany({
+            include: postInclude,
+            orderBy: {
+                createdAt: "desc"
             }
         });
         return result;
@@ -35,11 +38,33 @@ async function getPostById(post_id){
 async function getPostsLimit(limit){
     try {
         const result = await prisma.post.findMany({
-            take: limit
+            take: Number(limit),
+            include: postInclude,
+            orderBy: {
+                createdAt: "desc"
+            }
         });
         return result;
     } catch (error) {
         throw new Error("Error fetching posts with limit: " + error.message);
+    }
+}
+
+async function getPostsByUserId(userId, limit){
+    try {
+        const result = await prisma.post.findMany({
+            where: {
+                user_id: userId
+            },
+            include: postInclude,
+            ...(limit ? { take: Number(limit) } : {}),
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
+        return result;
+    } catch (error) {
+        throw new Error("Error fetching posts by user: " + error.message);
     }
 }
 
@@ -92,6 +117,7 @@ async function updatePost(post_id, {place_id, content, image_url}) {
 
 module.exports = {
     getAllPosts,
+    getPostsByUserId,
     createNewPostOfUser,
     deletePost,
     updatePost,

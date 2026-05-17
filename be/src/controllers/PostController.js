@@ -1,4 +1,4 @@
-const {getAllPosts , getPostById, createNewPostOfUser, deletePost, updatePost, getPostsLimit} = require('../services/post.service')
+const {getAllPosts , getPostsByUserId, getPostById, createNewPostOfUser, deletePost, updatePost, getPostsLimit} = require('../services/post.service')
 
 
 class PostController{
@@ -6,6 +6,11 @@ class PostController{
     async getPosts(req, res, next){
         try {
 			const limit = req.query.limit;
+            const userId = req.query.user_id;
+            if (userId) {
+                const data = await getPostsByUserId(userId, limit);
+                return res.status(200).json(data);
+            }
 			if(limit) {
 				const data = await getPostsLimit(limit);
 				return res.status(200).json(data);
