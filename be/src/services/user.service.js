@@ -1,9 +1,15 @@
 const { verify_password } = require('../auth/password');
 const { prisma } =  require("../../lib/prisma");
 
+function buildUsername(user) {
+    if (user?.email && typeof user.email === "string") {
+        return user.email.split("@")[0];
+    }
+    return String(user?.user_id || "user").slice(0, 8);
+}
+
 const publicUserSelect = {
     user_id: true,
-    username: true,
     email: true,
     full_name: true,
     avatar_url: true,
@@ -14,10 +20,13 @@ const publicUserSelect = {
 
 async function getAllUsers() {
     try {
-        const result = await prisma.user.findMany({
+        const users = await prisma.user.findMany({
             select: publicUserSelect
         });
-        return result;
+        return users.map((user) => ({
+            ...user,
+            username: buildUsername(user)
+        }));
     } catch (error) {
         throw new Error("Error fetching users: " + error.message);
     }
@@ -25,13 +34,17 @@ async function getAllUsers() {
 
 async function getUserById(id) {
     try {
-        const result = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 user_id: id
             },
             select: publicUserSelect
         });
-        return result;
+        if (!user) return null;
+        return {
+            ...user,
+            username: buildUsername(user)
+        };
     } catch (error) {
         throw new Error("Error fetching user: " + error.message);
     }
@@ -71,6 +84,7 @@ async function getUserProfileById(targetUserId, viewerUserId = null) {
 
         return {
             ...user,
+            username: buildUsername(user),
             stats: {
                 posts: postsCount,
                 followers: Number(followersRaw?.[0]?.count ?? 0),
@@ -128,7 +142,7 @@ async function getFollowersByUserId(userId, limit = 20, offset = 0) {
             prisma.$queryRaw`
                 SELECT
                     u."user_id",
-                    u."username",
+                    u."email",
                     u."full_name",
                     u."avatar_url",
                     uf."created_at"
@@ -147,7 +161,10 @@ async function getFollowersByUserId(userId, limit = 20, offset = 0) {
         ]);
 
         return {
-            items,
+            items: items.map((item) => ({
+                ...item,
+                username: item.email ? String(item.email).split("@")[0] : String(item.user_id).slice(0, 8)
+            })),
             total: Number(totalRaw?.[0]?.count ?? 0)
         };
     } catch (error) {
@@ -161,7 +178,7 @@ async function getFollowingByUserId(userId, limit = 20, offset = 0) {
             prisma.$queryRaw`
                 SELECT
                     u."user_id",
-                    u."username",
+                    u."email",
                     u."full_name",
                     u."avatar_url",
                     uf."created_at"
@@ -180,7 +197,10 @@ async function getFollowingByUserId(userId, limit = 20, offset = 0) {
         ]);
 
         return {
-            items,
+            items: items.map((item) => ({
+                ...item,
+                username: item.email ? String(item.email).split("@")[0] : String(item.user_id).slice(0, 8)
+            })),
             total: Number(totalRaw?.[0]?.count ?? 0)
         };
     } catch (error) {

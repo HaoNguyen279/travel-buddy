@@ -1,16 +1,5 @@
-const {sql, poolPromise} = require('../config/db');
-const db = require('../config/postgre');
+const db = require('../config/supabasepg');
 const crypto = require("crypto");
-
-async function getAllPosts(){
-    // const pool = await poolPromise;
-    // const result = await pool.request()
-    //     .query("SELECT * FROM Posts");
-    // return result.recordset;
-    const result = await db.query("SELECT * FROM Posts");
-    return result.rows;
-}
-
 
 // refreshToken: token thô (random string / jwt refresh)
 // userId: UUID của users.user_id
@@ -37,5 +26,5 @@ async function insertRefreshToken({userId, refreshToken, userAgent, ip, expiresI
 
 
 module.exports = {
-    getAllPosts, insertRefreshToken
+    insertRefreshToken
 }

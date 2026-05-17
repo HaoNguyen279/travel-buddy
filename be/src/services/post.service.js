@@ -1,9 +1,25 @@
 const { prisma } =  require("../../lib/prisma");
 
+function mapPostsAuthor(posts) {
+    return posts.map((post) => {
+        if (!post.author) return post;
+        const username = post.author.email
+            ? String(post.author.email).split("@")[0]
+            : String(post.user_id).slice(0, 8);
+        return {
+            ...post,
+            author: {
+                ...post.author,
+                username
+            }
+        };
+    });
+}
+
 const postInclude = {
     author : {
         select: {
-            username: true,
+            email: true,
             full_name: true,
             avatar_url: true
         }
@@ -18,7 +34,7 @@ async function getAllPosts(){
                 createdAt: "desc"
             }
         });
-        return result;
+        return mapPostsAuthor(result);
     } catch (error) {
         throw new Error("Error fetching posts: " + error.message);
     }
@@ -44,7 +60,7 @@ async function getPostsLimit(limit){
                 createdAt: "desc"
             }
         });
-        return result;
+        return mapPostsAuthor(result);
     } catch (error) {
         throw new Error("Error fetching posts with limit: " + error.message);
     }
@@ -62,7 +78,7 @@ async function getPostsByUserId(userId, limit){
                 createdAt: "desc"
             }
         });
-        return result;
+        return mapPostsAuthor(result);
     } catch (error) {
         throw new Error("Error fetching posts by user: " + error.message);
     }

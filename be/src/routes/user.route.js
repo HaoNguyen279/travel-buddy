@@ -20,7 +20,6 @@ router.delete('/:id/follow', authenticateAccessToken, UserController.unfollowUse
 router.get('/:id/followers', UserController.getFollowers);
 
 router.get('/:id/following', UserController.getFollowing);
-router.get('/me', (req, res, next) => UserController.getMe(req, res, next));
 
 router.get('/:id', (req, res, next) => UserController.getUserById(req, res, next));
 

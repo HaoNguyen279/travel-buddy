@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const {
     getAllUsers: getAllUsersService,
     getUserById: getUserByIdService,
@@ -10,12 +9,13 @@ const {
     createNewUser,
     verifyLoginUser,
     deleteUserById,
-    updateUser
+    updateUser,
+    findUserByUid,
+    findUserByEmail,
+    linkUserWithFirebaseUid,
+    createNewGoogleUser
 } = require('../services/user.service')
-=======
-const {getAllUsers, getUserById, createNewUser, verifyLoginUser, deleteUserById, updateUser, findUserByUid, findUserByEmail, linkUserWithFirebaseUid, createNewGoogleUser} = require('../services/user.service')
->>>>>>> 18c69ee5a90ea27ab84a10ae35cabd2d6a24add9
-const {hash_password} = require('../auth/password');
+
 const {generateAccesssToken, generateRefreshToken} = require('../middlewares/cookiesJwtAuth');
 const { insertRefreshToken } = require('../services/token.service');
 const jwt = require("jsonwebtoken");
@@ -253,7 +253,13 @@ class UserController{
             return await this.#handleAuthSuccess(res, user, req);
         } catch (error) {
             console.log("User login failed", error);
-            return res.status(401).json({message: "Invalid ID token"});
+            const details = error instanceof Error ? error.message : String(error);
+            const isTokenError = details.toLowerCase().includes("token");
+            return res.status(isTokenError ? 401 : 500).json({
+                success: false,
+                message: isTokenError ? "Invalid ID token" : "Login failed",
+                error: details
+            });
         }
     }
     async refresh(req, res, next){
@@ -310,6 +316,12 @@ class UserController{
             }
             const decodedToken = await admin.auth().verifyIdToken(idToken);
             const { uid, email, name, picture } = decodedToken;
+            if(!email){
+                return res.status(400).json({
+                    success: false,
+                    message: "Google account does not provide email"
+                });
+            }
 
             let user = await findUserByUid(uid);
             if (!user) {
@@ -329,10 +341,13 @@ class UserController{
 
             return await this.#handleAuthSuccess(res, user, req);
         } catch (error) {
-            console.log(error);
-            return res.status(401).json({
+            console.log("googleLogin failed:", error);
+            const details = error instanceof Error ? error.message : String(error);
+            const isTokenError = details.toLowerCase().includes("token");
+            return res.status(isTokenError ? 401 : 500).json({
                 success: false,
-                message: "Invalid token",
+                message: isTokenError ? "Invalid token" : "Google login failed",
+                error: details
             });
         }
     }
