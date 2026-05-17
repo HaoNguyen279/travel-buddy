@@ -8,6 +8,7 @@ const userRouter = require('./routes/user.route');
 const authRouter = require('./routes/auth.route');
 const postRouter = require('./routes/post.route');
 const tourRouter = require('./routes/tour.route');
+const searchRouter = require('./routes/search.route');
 // CORS policy
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001'],
@@ -15,7 +16,7 @@ app.use(cors({
 }));
 
 // lấy db từ file config pool connection 
-const db = require('../src/config/supabasepg');
+const db = require('../src/config/postgre');
 app.use(express.json()); // parse JSON khi get data từ BODY của POST request
 
 app.use(cookieParser());
@@ -34,6 +35,8 @@ app.use('/post', postRouter);
 app.use('/auth', authRouter);
 
 app.use('/tour', tourRouter);
+
+app.use('/search', searchRouter);
 
 
 const startServer = async () =>{

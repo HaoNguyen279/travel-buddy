@@ -128,6 +128,7 @@ export default function Home() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
     let isMounted = true;
@@ -145,6 +146,7 @@ export default function Home() {
       } finally {
         if (isMounted) {
           setIsLoading(false);
+          setVisibleCount(6);
         }
       }
     };
@@ -205,7 +207,7 @@ export default function Home() {
           )}
           {!isLoading && !error && tours.length > 0 && (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {tours.map((tour) => {
+              {tours.slice(0, visibleCount).map((tour) => {
                 const reviewsCount =
                   tour.ratings?.length ?? tour.booking_count ?? 0;
 
@@ -230,6 +232,17 @@ export default function Home() {
                   />
                 );
               })}
+            </div>
+          )}
+          {!isLoading && !error && tours.length > visibleCount && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((prev) => prev + 6)}
+                className="rounded-full border border-slate-300 px-6 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Xem thêm
+              </button>
             </div>
           )}
         </section>

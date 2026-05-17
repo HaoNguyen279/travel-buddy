@@ -72,4 +72,4 @@ class PlaceController {
     }
 }
 
-module.exports = new PlaceController;
+module.exports = new PlaceController();

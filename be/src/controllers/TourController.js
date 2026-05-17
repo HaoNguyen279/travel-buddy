@@ -7,7 +7,8 @@ const {
     getTourById,
     createNewTour,
     updateTour,
-    deleteTour
+    deleteTour,
+    createOrUpdateTourRating
 } = require('../services/tour.service');
 
 class TourController {
@@ -92,6 +93,40 @@ class TourController {
             res.status(200).json(result);
         } catch (error) {
             res.status(500).json({ message: "Internal server error: " + error });
+        }
+    }
+
+    // [POST] /tour/:id/rating
+    async createOrUpdateRating(req, res, next) {
+        try {
+            const tour_id = req.params.id;
+            const user_id = req.user?.id;
+            const score = Number(req.body?.score);
+            const review = req.body?.review ?? "";
+
+            if (!tour_id) return res.status(400).json({ message: "Tour ID is required" });
+            if (!user_id) return res.status(401).json({ message: "User not authenticated" });
+            if (!Number.isInteger(score) || score < 1 || score > 5) {
+                return res.status(400).json({ message: "Score must be an integer between 1 and 5" });
+            }
+
+            const result = await createOrUpdateTourRating({
+                tour_id,
+                user_id,
+                score,
+                review
+            });
+
+            return res.status(200).json(result);
+        } catch (error) {
+            const message = String(error?.message || error);
+            if (message.toLowerCase().includes("tour not found")) {
+                return res.status(404).json({ message: "Tour not found" });
+            }
+            if (message.toLowerCase().includes("score must")) {
+                return res.status(400).json({ message });
+            }
+            return res.status(500).json({ message: "Internal server error: " + error });
         }
     }
 

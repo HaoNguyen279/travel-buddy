@@ -5,6 +5,7 @@ import Link from "next/link";
 import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import api from "@/services/api";
+import { useAuth } from "@/app/context/AuthContext";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -139,6 +140,7 @@ const dataFooter = [
 
 export default function TourDetailPage({ params }: Props) {
   const { id } = React.use(params);
+  const { user } = useAuth();
   const prettyTitle = decodeURIComponent(id)
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -152,6 +154,11 @@ export default function TourDetailPage({ params }: Props) {
   const [tourData, setTourData] = useState<Tour | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingReview, setRatingReview] = useState("");
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [ratingSuccess, setRatingSuccess] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
   const formatDate = (value?: string | null) => {
@@ -188,11 +195,60 @@ export default function TourDetailPage({ params }: Props) {
       subtotal,
       total,
     };
-  }, [adults, children, packageType]);
+  }, [adults, children, packageType, tourData?.base_price]);
 
   useEffect(() => {
     getTourData();
-  }, []);
+  }, [id]);
+
+  const handleSubmitRating = async () => {
+    if (!user) {
+      setRatingError("Bạn cần đăng nhập để đánh giá tour.");
+      setRatingSuccess(null);
+      return;
+    }
+
+    const tourId = tourData?.tour_id ?? id;
+    if (!tourId) return;
+
+    setRatingSubmitting(true);
+    setRatingError(null);
+    setRatingSuccess(null);
+
+    try {
+      const payload = {
+        score: ratingScore,
+        review: ratingReview.trim(),
+      };
+      const res = await api.post(`/tour/${tourId}/rating`, payload);
+      const result = res.data;
+
+      setTourData((prev) => {
+        if (!prev) return prev;
+        const newRating = result?.rating;
+        const nextRatings = newRating
+          ? [
+              newRating,
+              ...(prev.ratings ?? []).filter((item) => item.rating_id !== newRating.rating_id),
+            ]
+          : prev.ratings;
+
+        return {
+          ...prev,
+          ratings: nextRatings,
+          average_rating: result?.average_rating ?? prev.average_rating,
+        };
+      });
+
+      setRatingReview("");
+      setRatingSuccess("Cảm ơn bạn đã đánh giá tour!");
+    } catch (err) {
+      console.error("Failed to submit rating:", err);
+      setRatingError("Gửi đánh giá thất bại. Vui lòng thử lại.");
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
 
   const ratingValue = tourData?.average_rating ?? 9.4;
   const reviewsCount = tourData?.ratings?.length ?? tourData?.booking_count ?? 215;
@@ -413,6 +469,61 @@ export default function TourDetailPage({ params }: Props) {
                       )}
                     </article>
                   ))}
+                </div>
+              </section>
+            )}
+
+            {!isLoading && !error && (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-xl font-semibold text-slate-900">Đánh giá tour</h2>
+                  <p className="text-sm text-slate-500">
+                    {user ? "Chia sẻ trải nghiệm của bạn" : "Đăng nhập để gửi đánh giá"}
+                  </p>
+                </div>
+
+                <div className="mt-4 grid gap-4">
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-slate-700">Điểm đánh giá</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((score) => (
+                        <button
+                          key={score}
+                          type="button"
+                          onClick={() => setRatingScore(score)}
+                          className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
+                            ratingScore === score
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                              : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {score} ★
+                        </button>
+                      ))}
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-slate-700">Nhận xét</span>
+                    <textarea
+                      value={ratingReview}
+                      onChange={(event) => setRatingReview(event.target.value)}
+                      placeholder="Bạn thích điều gì nhất trong tour này?"
+                      className="min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    />
+                  </label>
+
+                  {ratingError && <p className="text-sm text-red-600">{ratingError}</p>}
+                  {ratingSuccess && <p className="text-sm text-emerald-700">{ratingSuccess}</p>}
+
+                  <button
+                    type="button"
+                    disabled={ratingSubmitting || !user}
+                    onClick={handleSubmitRating}
+                    className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  >
+                    {ratingSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
+                  </button>
                 </div>
               </section>
             )}

@@ -48,13 +48,24 @@ async function getToursByPlaceSlug(slug) {
     if (!place) return [];
 
     const data = await prisma.tour.findMany({
-        where: {
-            place_id: place.place_id
-        },
-        include: {
-            place: true,
-            category: true
+      where: {
+        place_id: place.place_id,
+        deletedAt: null
+      },
+      include: {
+        place: true,
+        category: true,
+        ratings: {
+          where: { deletedAt: null },
+          select: {
+            rating_id: true,
+            score: true,
+            review: true,
+            created_at: true,
+            user_id: true
+          }
         }
+      }
     });
     return data;
 }
@@ -258,6 +269,91 @@ async function deleteTour(tour_id) {
     return data;
 }
 
+async function createOrUpdateTourRating({ tour_id, user_id, score, review }) {
+  if (!tour_id || !user_id) {
+    throw new Error("tour_id and user_id are required");
+  }
+
+  const numericScore = Number(score);
+  if (!Number.isInteger(numericScore) || numericScore < 1 || numericScore > 5) {
+    throw new Error("score must be an integer between 1 and 5");
+  }
+
+  const normalizedReview = typeof review === "string" ? review.trim() : "";
+
+  const tour = await prisma.tour.findFirst({
+    where: {
+      tour_id,
+      deletedAt: null
+    },
+    select: { tour_id: true }
+  });
+
+  if (!tour) {
+    throw new Error("tour not found");
+  }
+
+  const existing = await prisma.rating.findFirst({
+    where: {
+      tour_id,
+      user_id,
+      deletedAt: null
+    }
+  });
+
+  let rating;
+  if (existing) {
+    rating = await prisma.rating.update({
+      where: { rating_id: existing.rating_id },
+      data: {
+        score: numericScore,
+        review: normalizedReview
+      }
+    });
+  } else {
+    rating = await prisma.rating.create({
+      data: {
+        tour_id,
+        user_id,
+        score: numericScore,
+        review: normalizedReview
+      }
+    });
+  }
+
+  const ratingAggregate = await prisma.rating.aggregate({
+    where: { tour_id, deletedAt: null },
+    _avg: { score: true },
+    _count: { _all: true }
+  });
+
+  const averageRating = Number(ratingAggregate._avg?.score ?? 0);
+
+  await prisma.tour.update({
+    where: { tour_id },
+    data: { average_rating: averageRating }
+  });
+
+  const ratingWithReviewer = await prisma.rating.findUnique({
+    where: { rating_id: rating.rating_id },
+    include: {
+      reviewer: {
+        select: {
+          user_id: true,
+          full_name: true,
+          avatar_url: true
+        }
+      }
+    }
+  });
+
+  return {
+    rating: ratingWithReviewer,
+    average_rating: averageRating,
+    ratings_count: ratingAggregate._count?._all ?? 0
+  };
+}
+
 module.exports = {
     getAllTours,
     getToursLimit,
@@ -267,5 +363,6 @@ module.exports = {
     getTourById,
     createNewTour,
     updateTour,
-    deleteTour
+  deleteTour,
+  createOrUpdateTourRating
 }

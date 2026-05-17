@@ -6,7 +6,8 @@ const pool = new Pool({
     host: 'localhost',
     database: 'TravellerPostgre',
     password: process.env.DB_POSTGRE_PASS,
-    port: 5432
+    port: 5432,
+    ssl: false,
 });
 
 const testConnection = async () => {
