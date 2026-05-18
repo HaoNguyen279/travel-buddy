@@ -84,10 +84,10 @@ const TravelSearch = () => {
 
       try {
         const data = await getToursLimit(8);
-        const items: TourSearchItem[] = Array.isArray(data)
-          ? data.map((tour): TourSearchItem => ({
+        const items = Array.isArray(data)
+          ? data.map((tour) : SearchItem => ({
               type: "tour",
-              tour_id: tour.tour_id,
+              tour_id: String(tour.tour_id),
               name: tour.name,
               image_url: tour.image_url,
               average_rating: tour.average_rating,
@@ -307,7 +307,9 @@ const TravelSearch = () => {
                             {item.name}
                           </div>
                           <div className="text-xs text-gray-400 truncate">
-                            {item.place?.name ?? "Tour"}
+                            {item.type === "tour" 
+                            ? (item.place?.name ?? "Tour") 
+                            : "Điểm đến"}
                           </div>
                         </div>
                       </button>

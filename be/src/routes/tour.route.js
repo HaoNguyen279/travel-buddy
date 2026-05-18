@@ -9,6 +9,8 @@ router.delete('/:id', TourController.deleteTour);
 
 router.put('/:id', TourController.updateTour);
 
+router.get('/form-data', TourController.getTourFormData);
+
 router.get('/destination/:slug', TourController.getToursByPlaceSlug);
 
 router.get('/:id', TourController.getTourById);

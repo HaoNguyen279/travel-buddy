@@ -59,14 +59,6 @@ export default function Dropdown() {
       },
     },
     {
-      label: 'Cài đặt',
-      icon: <Settings className="h-4 w-4" />,
-      onClick: () => {
-        console.log('Go settings');
-        setOpen(false);
-      },
-    },
-    {
       label: 'Đăng xuất',
       icon: <LogOut className="h-4 w-4" />,
       danger: true,

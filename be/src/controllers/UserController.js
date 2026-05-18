@@ -318,12 +318,19 @@ class UserController{
 
     
     async me(req, res, next){
-        const request_access_token = req.cookies.accessToken;
-        if(!request_access_token){
-            return res.status(401).json({message : "Access token missing"});
+        try {
+            const request_access_token = req.cookies.accessToken;
+            if(!request_access_token){
+                return res.status(401).json({message : "Access token missing"});
+            }
+
+            const payload = jwt.verify(request_access_token, process.env.JWT_ACCESS_SECRET);
+            const data = await getUserByIdService(payload?.id);
+            if(!data) return res.status(404).json({message: "User not found"});
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(401).json({message: "Invalid or expired token"});
         }
-        const payload = jwt.verify(request_access_token, process.env.JWT_ACCESS_SECRET);
-        
     }
     
     // [POST] /auth/google-login

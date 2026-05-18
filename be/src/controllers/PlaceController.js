@@ -1,22 +1,41 @@
-const { getAllPlaces, getPlaceById, getPlacesLimit, createNewPlace, updatePlace, deletePlace, getPlacesByDestination } = require('../services/place.service')
+const {
+    getAllPlaces,
+    getAllPlacesWithTours,
+    getPlaceById,
+    getPlacesLimit,
+    getPlacesLimitWithTours,
+    createNewPlace,
+    updatePlace,
+    deletePlace,
+    getPlacesByDestination,
+    getPlacesByDestinationWithTours
+} = require('../services/place.service')
 
 class PlaceController {
     // [GET] /place - /place?limit=number
     async getPlaces(req, res, next) {
         try {
             const limit = parseInt(req.query.limit);
+            const includeTours = String(req.query.includeTours).toLowerCase() === "true";
+            const tourLimit = Number(req.query.tourLimit ?? 3);
             if(limit) {
-                const data = await getPlacesLimit(limit);
+                const data = includeTours
+                    ? await getPlacesLimitWithTours(limit, tourLimit)
+                    : await getPlacesLimit(limit);
                 return res.status(200).json(data);
             }
             else{
                 const destination_slug = req.query.destination;
                 if(destination_slug){
-                    const data = await getPlacesByDestination(destination_slug);
+                    const data = includeTours
+                        ? await getPlacesByDestinationWithTours(destination_slug, tourLimit)
+                        : await getPlacesByDestination(destination_slug);
                     res.status(200).json(data);
                 }
             }
-            const data = await getAllPlaces();
+            const data = includeTours
+                ? await getAllPlacesWithTours(tourLimit)
+                : await getAllPlaces();
             res.status(200).json(data);
         } catch (error) {
             res.status(500).json({message: "Internal server error: " + error});

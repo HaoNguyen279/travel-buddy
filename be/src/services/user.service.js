@@ -15,7 +15,8 @@ const publicUserSelect = {
     avatar_url: true,
     bio: true,
     createdAt: true,
-    updatedAt: true
+    updatedAt: true,
+    is_admin: true
 };
 
 const privateUserSelect = {
