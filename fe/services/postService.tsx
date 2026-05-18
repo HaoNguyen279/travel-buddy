@@ -23,3 +23,13 @@ export const getPosts = async (userId?: string): Promise<Post[]> => {
   });
   return Array.isArray(res.data) ? res.data : [];
 };
+
+export const getPostsByPlaceSlug = async (
+  slug: string,
+  limit?: number,
+): Promise<Post[]> => {
+  const res = await api.get(`/post/place/${slug}`, {
+    params: limit ? { limit } : undefined,
+  });
+  return Array.isArray(res.data) ? res.data : [];
+};

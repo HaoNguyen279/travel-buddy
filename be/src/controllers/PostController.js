@@ -1,4 +1,13 @@
-const {getAllPosts , getPostsByUserId, getPostById, createNewPostOfUser, deletePost, updatePost, getPostsLimit} = require('../services/post.service')
+const {
+	getAllPosts,
+	getPostsByUserId,
+	getPostById,
+	createNewPostOfUser,
+	deletePost,
+	updatePost,
+	getPostsLimit,
+	getPostsByPlaceSlug
+} = require('../services/post.service')
 
 
 class PostController{
@@ -68,6 +77,19 @@ class PostController{
 			res.status(200).json(data);
 		} catch (error) {
 			res.status(500).json({message: "Internal server error:" + error});
+		}
+	}
+
+	// [GET] /post/place/:slug
+	async getPostsByPlaceSlug(req, res, next){
+		try {
+			const slug = req.params.slug;
+			if(!slug) return res.status(400).json({message: "Place slug is required"});
+			const limit = req.query.limit;
+			const data = await getPostsByPlaceSlug(slug, limit);
+			return res.status(200).json(data);
+		} catch (error) {
+			return res.status(500).json({message: "Internal server error:" + error});
 		}
 	}
  

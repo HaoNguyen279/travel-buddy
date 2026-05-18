@@ -35,6 +35,10 @@ export function ItemCard({
   currency = "VND",
   isGenius = true,
 }: Partial<AccommodationCardProps>) {
+  const normalizedRating = Math.min(Math.max(rating, 0), 5);
+  const filledStars = Math.round(normalizedRating);
+  const totalStars = 5;
+
   return (
     <Link href={`/tour/${tour_id}`}>
       <article className="group w-full overflow-hidden bg-white border border-gray-200/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:border-gray-300/80 hover:-translate-y-0.5">
@@ -65,8 +69,13 @@ export function ItemCard({
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5">
           <span className="font-medium">{type}</span>
           <div className="flex text-amber-400">
-            {[...Array(4)].map((_, i) => (
-              <Star key={i} size={12} fill="currentColor" />
+            {[...Array(totalStars)].map((_, i) => (
+              <Star
+                key={i}
+                size={12}
+                fill={i < filledStars ? "currentColor" : "none"}
+                className={i < filledStars ? "text-amber-400" : "text-gray-300"}
+              />
             ))}
           </div>
         </div>
@@ -88,7 +97,7 @@ export function ItemCard({
         {/* Rating Section */}
         <div className="mb-3 flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-xs font-bold text-white">
-            {rating}
+            {normalizedRating.toFixed(1)}
           </div>
           <div className="flex flex-col text-xs leading-tight">
             <span className="font-semibold text-gray-800">{ratingText}</span>

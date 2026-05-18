@@ -4,10 +4,10 @@
 import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import { SectionHeading } from "@/components/section/SectionHeading";
-import { ItemCard } from "@/components/ui/ItemCard";
 import { getToursByPlaceSlug } from "@/services/tourService";
+import { getPostsByPlaceSlug, type Post } from "@/services/postService";
 import React, { useEffect, useMemo, useState } from "react";
-
+import { ItemCard } from "@/components/ui/ItemCard";
 type Props = {
   params: Promise<{ id: string }>;
 };
@@ -35,12 +35,14 @@ type Tour = {
   } | null;
 };
 
+type PlacePost = Post;
+
 const navProps = {
   webName: "TravelBuddy",
   subtitle: "",
   itemOnNav: [
     { itemName: "Bài viết", linkTo: "/post" },
-    { itemName: "Địa điểm", linkTo: "/place/da-nang" },
+    { itemName: "Địa điểm", linkTo: "/place" },
     { itemName: "Chat", linkTo: "/chat" },
   ],
 };
@@ -94,18 +96,20 @@ const dataFooter = [
 const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
 const getRatingText = (rating: number) => {
-  if (rating >= 9.5) return "Xuất sắc";
-  if (rating >= 9) return "Tuyệt hảo";
-  if (rating >= 8) return "Rất tốt";
-  if (rating >= 7) return "Tốt";
+  if (rating >= 4.5) return "Xuất sắc";
+  if (rating >= 4) return "Tuyệt hảo";
+  if (rating >= 3.5) return "Rất tốt";
+  if (rating >= 3) return "Tốt";
   return "Ổn";
 };
 
 export default function Place({ params }: Props) {
   const { id } = React.use(params);
   const [tours, setTours] = useState<Tour[]>([]);
+  const [posts, setPosts] = useState<PlacePost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [postError, setPostError] = useState<string | null>(null);
 
   const placeInfo = useMemo(() => tours[0]?.place ?? null, [tours]);
 
@@ -123,14 +127,20 @@ export default function Place({ params }: Props) {
 
     const fetchTours = async () => {
       try {
-        const data = await getToursByPlaceSlug(id);
+        const [tourData, postData] = await Promise.all([
+          getToursByPlaceSlug(id),
+          getPostsByPlaceSlug(id, 6)
+        ]);
         if (isMounted) {
-          setTours(Array.isArray(data) ? data : []);
+          setTours(Array.isArray(tourData) ? tourData : []);
+          setPosts(Array.isArray(postData) ? postData : []);
           setError(null);
+          setPostError(null);
         }
       } catch (err) {
         if (isMounted) {
           setError("Không tải được danh sách tour. Vui lòng thử lại sau.");
+          setPostError("Không tải được bài viết về điểm đến này.");
         }
       } finally {
         if (isMounted) {
@@ -231,6 +241,80 @@ export default function Place({ params }: Props) {
                   />
                 );
               })}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-6">
+          <SectionHeading
+            title={`Bài viết về ${placeTitle}`}
+            description="Cập nhật trải nghiệm và chia sẻ mới nhất từ cộng đồng."
+          />
+
+          {isLoading && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+              Đang tải bài viết...
+            </div>
+          )}
+
+          {!isLoading && postError && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600">
+              {postError}
+            </div>
+          )}
+
+          {!isLoading && !postError && posts.length === 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+              Chưa có bài viết nào về điểm đến này.
+            </div>
+          )}
+
+          {!isLoading && !postError && posts.length > 0 && (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {posts.map((post) => (
+                <article
+                  key={post.post_id}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 overflow-hidden rounded-full bg-slate-100">
+                      {post.author?.avatar_url ? (
+                        <img
+                          src={post.author.avatar_url}
+                          alt={post.author.full_name ?? "User"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
+                          TB
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {post.author?.full_name ?? post.author?.username ?? "Ẩn danh"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {post.createdAt || post.created_at || "Vừa đăng"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {post.image_url && (
+                    <div className="mt-4 overflow-hidden rounded-xl">
+                      <img
+                        src={post.image_url}
+                        alt={post.content}
+                        className="h-48 w-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <p className="mt-4 text-sm leading-6 text-slate-600 line-clamp-4">
+                    {post.content}
+                  </p>
+                </article>
+              ))}
             </div>
           )}
         </section>

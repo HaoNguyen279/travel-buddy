@@ -4,18 +4,28 @@ const { prisma } =  require("../../lib/prisma");
 
 
 async function getAllTours() {
-    const data = await prisma.tour.findMany({
-        include: {
-            place: true,
-            category: true
-        }
-    });
+  const data = await prisma.tour.findMany({
+    where: {
+      deletedAt: null,
+      place: { deletedAt: null },
+      category: { deletedAt: null }
+    },
+    include: {
+      place: true,
+      category: true
+    }
+  });
     return data;
 }
 
 async function getToursLimit(limit) {
     const data = await prisma.tour.findMany({
         take: limit,
+    where: {
+      deletedAt: null,
+      place: { deletedAt: null },
+      category: { deletedAt: null }
+    },
         include: {
             place: true,
             category: true
@@ -27,7 +37,10 @@ async function getToursLimit(limit) {
 async function getToursByPlace(place_id) {
     const data = await prisma.tour.findMany({
         where: {
-            place_id: place_id
+      place_id: place_id,
+      deletedAt: null,
+      place: { deletedAt: null },
+      category: { deletedAt: null }
         },
         include: {
             place: true,
@@ -41,7 +54,8 @@ async function getToursByPlaceSlug(slug) {
     // Tìm place theo slug, rồi lấy toàn bộ tours của place đó
     const place = await prisma.place.findFirst({
         where: {
-            slug: slug
+      slug: slug,
+      deletedAt: null
         }
     });
 
@@ -50,7 +64,9 @@ async function getToursByPlaceSlug(slug) {
     const data = await prisma.tour.findMany({
       where: {
         place_id: place.place_id,
-        deletedAt: null
+        deletedAt: null,
+        place: { deletedAt: null },
+        category: { deletedAt: null }
       },
       include: {
         place: true,
@@ -73,7 +89,10 @@ async function getToursByPlaceSlug(slug) {
 async function getToursByCategory(category_id) {
     const data = await prisma.tour.findMany({
         where: {
-            category_id: category_id
+      category_id: category_id,
+      deletedAt: null,
+      place: { deletedAt: null },
+      category: { deletedAt: null }
         },
         include: {
             place: true,
@@ -221,7 +240,7 @@ async function getTourById(tour_id) {
   return tour;
 }
 
-async function createNewTour({place_id, category_id, name, description, base_price, days, nights, max_guests, min_guests, image_url}) {
+async function createNewTour({place_id, category_id, name, description, base_price, days, nights, max_guests, min_guests, image_url, status}) {
     const data = await prisma.tour.create({
         data: {
             place_id,
@@ -233,13 +252,26 @@ async function createNewTour({place_id, category_id, name, description, base_pri
             nights,
             max_guests,
             min_guests,
-            image_url
+      image_url,
+      status
         }
     });
     return data;
 }
 
-async function updateTour(tour_id, {place_id, category_id, name, description, base_price, days, nights, max_guests, min_guests, image_url}) {
+async function updateTour(tour_id, {place_id, category_id, name, description, base_price, days, nights, max_guests, min_guests, image_url, status}) {
+  const existing = await prisma.tour.findFirst({
+    where: {
+      tour_id: tour_id,
+      deletedAt: null
+    },
+    select: { tour_id: true }
+  });
+
+  if (!existing) {
+    throw new Error("Tour not found");
+  }
+
     const data = await prisma.tour.update({
         where: {
             tour_id: tour_id
@@ -254,19 +286,41 @@ async function updateTour(tour_id, {place_id, category_id, name, description, ba
             nights,
             max_guests,
             min_guests,
-            image_url
+      image_url,
+      status
         }
     });
     return data;
 }
 
 async function deleteTour(tour_id) {
-    const data = await prisma.tour.delete({
-        where: {
-            tour_id: tour_id
-        }
-    });
-    return data;
+  const data = await prisma.tour.update({
+    where: {
+      tour_id: tour_id
+    },
+    data: {
+      deletedAt: new Date()
+    }
+  });
+  return data;
+}
+
+async function getTourFormData() {
+  const [places, categories] = await Promise.all([
+    prisma.place.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" }
+    }),
+    prisma.category.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: "asc" }
+    })
+  ]);
+
+  return {
+    places,
+    categories
+  };
 }
 
 async function createOrUpdateTourRating({ tour_id, user_id, score, review }) {
@@ -364,5 +418,6 @@ module.exports = {
     createNewTour,
     updateTour,
   deleteTour,
-  createOrUpdateTourRating
+    createOrUpdateTourRating,
+    getTourFormData
 }

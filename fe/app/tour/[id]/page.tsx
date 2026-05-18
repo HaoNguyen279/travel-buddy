@@ -161,6 +161,7 @@ export default function TourDetailPage({ params }: Props) {
   const [ratingSuccess, setRatingSuccess] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
+  const normalizeRating = (value: number) => Math.min(Math.max(value, 0), 5);
   const formatDate = (value?: string | null) => {
     if (!value) return "";
     const date = new Date(value);
@@ -250,7 +251,7 @@ export default function TourDetailPage({ params }: Props) {
     }
   };
 
-  const ratingValue = tourData?.average_rating ?? 9.4;
+  const ratingValue = normalizeRating(tourData?.average_rating ?? 4.7);
   const reviewsCount = tourData?.ratings?.length ?? tourData?.booking_count ?? 215;
   const place = tourData?.place;
   const category = tourData?.category;
@@ -305,7 +306,7 @@ export default function TourDetailPage({ params }: Props) {
                   <article className="rounded-2xl border border-slate-200 p-3">
                     <p className="text-xs uppercase tracking-wide text-slate-500">Đánh giá</p>
                     <p className="mt-1 text-lg font-semibold text-slate-900">
-                      {ratingValue.toFixed(1)}/10 ({reviewsCount} đánh giá)
+                      {ratingValue.toFixed(1)}/5 ({reviewsCount} đánh giá)
                     </p>
                   </article>
                   <article className="rounded-2xl border border-slate-200 p-3">
@@ -395,7 +396,7 @@ export default function TourDetailPage({ params }: Props) {
                           {tour.category?.name ?? "Tour"} · {tour.place?.name ?? ""}
                         </p>
                         <p className="text-sm text-emerald-700">
-                          ★ {tour.average_rating.toFixed(1)} ({tour.ratings?.length ?? 0} đánh giá)
+                          ★ {normalizeRating(tour.average_rating).toFixed(1)} ({tour.ratings?.length ?? 0} đánh giá)
                         </p>
                         <p className="text-lg font-semibold text-slate-900">
                           {formatCurrency(tour.base_price)} VND
@@ -429,7 +430,7 @@ export default function TourDetailPage({ params }: Props) {
                         </p>
                       </div>
                       <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
-                        <span>★ {tour.average_rating.toFixed(1)}</span>
+                        <span>★ {normalizeRating(tour.average_rating).toFixed(1)}</span>
                         <span>{tour.ratings?.length ?? 0} đánh giá</span>
                       </div>
                       <Link

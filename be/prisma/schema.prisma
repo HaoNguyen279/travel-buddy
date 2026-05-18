@@ -27,6 +27,7 @@ model User {
   favorites Favorite[]
   comments Comment[]
   ratings Rating[]
+  is_admin Boolean @default(false)
   followers UserFollow[] @relation("user_followers")
   following UserFollow[] @relation("user_following")
   deletedAt DateTime?  @db.Timestamp(6)

@@ -8,7 +8,8 @@ const {
     createNewTour,
     updateTour,
     deleteTour,
-    createOrUpdateTourRating
+    createOrUpdateTourRating,
+    getTourFormData
 } = require('../services/tour.service');
 
 class TourController {
@@ -80,6 +81,10 @@ class TourController {
             const result = await updateTour(tour_id, data);
             res.status(200).json(result);
         } catch (error) {
+            const message = String(error?.message || error);
+            if (message.toLowerCase().includes("not found")) {
+                return res.status(404).json({ message: "Tour not found" });
+            }
             res.status(500).json({ message: "Internal server error: " + error });
         }
     }
@@ -92,6 +97,10 @@ class TourController {
             const result = await deleteTour(tour_id);
             res.status(200).json(result);
         } catch (error) {
+            const message = String(error?.message || error);
+            if (message.toLowerCase().includes("not found")) {
+                return res.status(404).json({ message: "Tour not found" });
+            }
             res.status(500).json({ message: "Internal server error: " + error });
         }
     }
@@ -127,6 +136,16 @@ class TourController {
                 return res.status(400).json({ message });
             }
             return res.status(500).json({ message: "Internal server error: " + error });
+        }
+    }
+
+    // [GET] /tour/form-data
+    async getTourFormData(req, res, next) {
+        try {
+            const data = await getTourFormData();
+            res.status(200).json(data);
+        } catch (error) {
+            res.status(500).json({ message: "Internal server error: " + error });
         }
     }
 

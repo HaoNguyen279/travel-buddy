@@ -33,10 +33,10 @@ const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN").format(value);
 
 const getRatingText = (rating: number) => {
-  if (rating >= 9.5) return "Xuất sắc";
-  if (rating >= 9) return "Tuyệt hảo";
-  if (rating >= 8) return "Rất tốt";
-  if (rating >= 7) return "Tốt";
+  if (rating >= 4.5) return "Xuất sắc";
+  if (rating >= 4) return "Tuyệt hảo";
+  if (rating >= 3.5) return "Rất tốt";
+  if (rating >= 3) return "Tốt";
   return "Ổn";
 };
 
@@ -72,7 +72,7 @@ const navProps = {
   subtitle: "",
   itemOnNav: [
     { itemName: "Bài viết", linkTo: "/post" },
-    { itemName: "Địa điểm", linkTo: "/place/da-nang" },
+    { itemName: "Địa điểm", linkTo: "/place" },
     { itemName: "Chat", linkTo: "/chat" },
   ],
 };

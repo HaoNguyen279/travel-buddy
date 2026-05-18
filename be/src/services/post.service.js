@@ -29,6 +29,7 @@ const postInclude = {
 async function getAllPosts(){
     try {
         const result = await prisma.post.findMany({
+            where: { deletedAt: null },
             include: postInclude,
             orderBy: {
                 createdAt: "desc"
@@ -54,6 +55,7 @@ async function getPostById(post_id){
 async function getPostsLimit(limit){
     try {
         const result = await prisma.post.findMany({
+            where: { deletedAt: null },
             take: Number(limit),
             include: postInclude,
             orderBy: {
@@ -70,7 +72,8 @@ async function getPostsByUserId(userId, limit){
     try {
         const result = await prisma.post.findMany({
             where: {
-                user_id: userId
+                user_id: userId,
+                deletedAt: null
             },
             include: postInclude,
             ...(limit ? { take: Number(limit) } : {}),
@@ -131,6 +134,32 @@ async function updatePost(post_id, {place_id, content, image_url}) {
     }
 }
 
+async function getPostsByPlaceSlug(slug, limit){
+    const place = await prisma.place.findFirst({
+        where: {
+            slug: slug,
+            deletedAt: null
+        },
+        select: { place_id: true }
+    });
+
+    if (!place) return [];
+
+    const result = await prisma.post.findMany({
+        where: {
+            place_id: place.place_id,
+            deletedAt: null
+        },
+        include: postInclude,
+        ...(limit ? { take: Number(limit) } : {}),
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+
+    return mapPostsAuthor(result);
+}
+
 module.exports = {
     getAllPosts,
     getPostsByUserId,
@@ -138,5 +167,6 @@ module.exports = {
     deletePost,
     updatePost,
     getPostById,
-    getPostsLimit
+    getPostsLimit,
+    getPostsByPlaceSlug
 } 
