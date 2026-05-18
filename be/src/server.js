@@ -39,6 +39,7 @@ app.use('/tour', tourRouter);
 
 app.use('/search', searchRouter);
 
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () =>{
     const isConnected = await db.testConnection();
@@ -46,8 +47,8 @@ const startServer = async () =>{
         console.error("Đéo connect được PostgreDB");
         process.exit(1); 
     }
-    app.listen(3000, () => {
-        console.log('Server is running on port 3000');
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
     })
 }
 

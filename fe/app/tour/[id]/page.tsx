@@ -77,12 +77,12 @@ const navProps = {
   subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
   itemOnNav: [
     {
-      itemName: "Post",
+      itemName: "Bài đăng",
       linkTo: "/post",
     },
     {
-      itemName: "Place",
-      linkTo: "/place/da-nang",
+      itemName: "Địa điểm",
+      linkTo: "/place",
     },
     {
       itemName: "Chat",

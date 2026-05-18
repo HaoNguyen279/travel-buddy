@@ -23,8 +23,8 @@ const navProps = {
   webName: "TravelBuddy",
   subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
   itemOnNav: [
-    { itemName: "Post", linkTo: "/post" },
-    { itemName: "Place", linkTo: "/place/da-nang" },
+    { itemName: "Bài viết", linkTo: "/post" },
+    { itemName: "Địa điểm", linkTo: "/place" },
     { itemName: "Chat", linkTo: "/chat" },
   ],
 };

@@ -19,6 +19,10 @@ export type Post = {
     name?: string | null;
   } | null;
 };
+export const createPost = async (payload: CreatePostPayload): Promise<Post> => {
+  const res = await api.post("/post", payload);
+  return res.data as Post;
+}
 
 export type CreatePostPayload = {
   user_id: string;

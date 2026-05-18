@@ -4,10 +4,10 @@
 import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import { SectionHeading } from "@/components/section/SectionHeading";
-import { ItemCard } from "@/components/ui/ItemCard";
 import { getPlaceById, getPlaceBySlug, type PlaceSummary } from "@/services/placeService";
-import { getToursByPlaceId, getToursByPlaceSlug } from "@/services/tourService";
+import { getToursByPlaceId, getToursByPlaceSlug, } from "@/services/tourService";
 import React, { useEffect, useMemo, useState } from "react";
+import { getPostsByPlaceSlug, type Post } from "@/services/postService";
 import { ItemCard } from "@/components/ui/ItemCard";
 type Props = {
   params: Promise<{ id: string }>;
@@ -119,77 +119,67 @@ export default function Place({ params }: Props) {
   }, [id, placeInfo?.name]);
 
   useEffect(() => {
-    let isMounted = true;
+  let isMounted = true;
 
-    const fetchTours = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setPostError(null);
 
-        const bySlug = await getToursByPlaceSlug(id);
-        const toursFromSlug = Array.isArray(bySlug) ? bySlug : [];
+      // 1) Load tours (ưu tiên slug, fallback placeId)
+      const toursFromSlug = await getToursByPlaceSlug(id);
+      let toursFinal: Tour[] = Array.isArray(toursFromSlug) ? toursFromSlug : [];
 
-        if (isMounted && toursFromSlug.length > 0) {
-          setTours(toursFromSlug);
-          setResolvedPlace(toursFromSlug[0]?.place ?? null);
-          return;
-        }
+      if (toursFinal.length === 0) {
+        const toursFromPlaceId = await getToursByPlaceId(id);
+        toursFinal = Array.isArray(toursFromPlaceId) ? toursFromPlaceId : [];
+      }
 
-        const byPlaceId = await getToursByPlaceId(id);
-        const toursFromPlaceId = Array.isArray(byPlaceId) ? byPlaceId : [];
+      // 2) Load posts song song (không phụ thuộc tours)
+      const postsRes = await getPostsByPlaceSlug(id, 6);
+      const postsFinal: PlacePost[] = Array.isArray(postsRes) ? postsRes : [];
 
-        if (isMounted && toursFromPlaceId.length > 0) {
-          setTours(toursFromPlaceId);
-          setResolvedPlace(toursFromPlaceId[0]?.place ?? null);
-          return;
-        }
+      // 3) Resolve place
+      let placeFinal: PlaceSummary | null = toursFinal[0]?.place ?? null;
 
-        let place: PlaceSummary | null = null;
+      if (!placeFinal) {
         try {
-          place = await getPlaceBySlug(id);
+          placeFinal = await getPlaceBySlug(id);
         } catch {
-          place = null;
+          placeFinal = null;
         }
 
-        if (!place) {
+        if (!placeFinal) {
           try {
-            place = await getPlaceById(id);
+            placeFinal = await getPlaceById(id);
           } catch {
-            place = null;
+            placeFinal = null;
           }
         }
-
-        if (isMounted) {
-          setTours([]);
-          setResolvedPlace(place);
-        const [tourData, postData] = await Promise.all([
-          getToursByPlaceSlug(id),
-          getPostsByPlaceSlug(id, 6)
-        ]);
-        if (isMounted) {
-          setTours(Array.isArray(tourData) ? tourData : []);
-          setPosts(Array.isArray(postData) ? postData : []);
-          setError(null);
-          setPostError(null);
-        }
-      } catch {
-        if (isMounted) {
-          setError("Không tải được danh sách tour. Vui lòng thử lại sau.");
-          setPostError("Không tải được bài viết về điểm đến này.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
       }
-    };
 
-    fetchTours();
+      if (!isMounted) return;
 
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+      setTours(toursFinal);
+      setPosts(postsFinal);
+      setResolvedPlace(placeFinal);
+    } catch {
+      if (!isMounted) return;
+      setError("Không tải được danh sách tour. Vui lòng thử lại sau.");
+      setPostError("Không tải được bài viết về điểm đến này.");
+    } finally {
+      if (!isMounted) return;
+      setIsLoading(false);
+    }
+  };
+
+  fetchData();
+
+  return () => {
+    isMounted = false;
+  };
+}, [id]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">

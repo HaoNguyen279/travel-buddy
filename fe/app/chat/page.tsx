@@ -71,7 +71,7 @@ const navProps = {
     },
     {
       itemName: "Địa điểm",
-      linkTo: "/place/da-nang",
+      linkTo: "/place",
     },
     {
       itemName: "Chat",

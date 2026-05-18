@@ -6,6 +6,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { signOut , getAuth} from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { setUserPresenceState } from '@/features/chat/hooks/usePresence';
+import { me } from '@/services/userService';
 // ai gen UI/tailwindcss, sửa lại handle function các item, 
 type DropdownItem = {
   label: string;
@@ -19,6 +20,7 @@ export default function Dropdown() {
   const dropdownRef = useRef<HTMLDivElement>(null);
     const {user, loading} = useAuth();
     const router = useRouter();
+    const [isAdmin, setIsAdmin] = useState(false);
     const auth = getAuth();
     const handleLogout= async ()=>{
         const authUser = auth.currentUser;
@@ -48,6 +50,22 @@ export default function Dropdown() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const data = await me();
+        setIsAdmin(Boolean(data?.is_admin));
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+
+    if (user) {
+      void checkAdmin();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   const items: DropdownItem[] = [
     {
@@ -58,6 +76,18 @@ export default function Dropdown() {
         setOpen(false);
       },
     },
+    ...(isAdmin
+      ? [
+          {
+            label: 'Dashboard',
+            icon: <User className="h-4 w-4" />,
+            onClick: () => {
+              router.push('/dashboard/tour');
+              setOpen(false);
+            },
+          },
+        ]
+      : []),
     {
       label: 'Đăng xuất',
       icon: <LogOut className="h-4 w-4" />,
