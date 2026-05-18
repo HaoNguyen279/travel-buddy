@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "https://travel-buddy-hbw8.onrender.com",
   withCredentials: true, // mỗi khi gửi request sẽ tự động gửi cookie (nếu có) đi kèm ez
 });
 

@@ -161,10 +161,6 @@ export default function Home() {
           />
           <TravelSearch />
         </section>
-
-        {/* Categories */}
-        <CategoryGrid />
-
         {/* Featured Experiences */}
         <section className="space-y-6">
           <SectionHeading
