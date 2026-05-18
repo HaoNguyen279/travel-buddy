@@ -18,6 +18,11 @@ const publicUserSelect = {
     updatedAt: true
 };
 
+const privateUserSelect = {
+    ...publicUserSelect,
+    phone: true
+};
+
 async function getAllUsers() {
     try {
         const users = await prisma.user.findMany({
@@ -54,7 +59,7 @@ async function getUserProfileById(targetUserId, viewerUserId = null) {
     try {
         const user = await prisma.user.findUnique({
             where: { user_id: targetUserId },
-            select: publicUserSelect
+            select: viewerUserId === targetUserId ? privateUserSelect : publicUserSelect
         });
         if (!user) return null;
 
@@ -221,24 +226,62 @@ async function deleteUserById(id) {
     }
 }
 async function updateUser(userdata) {
+    const {
+        user_id,
+        full_name,
+        avatar_url,
+        bio,
+        phone
+    } = userdata || {};
+
+    if (!user_id) {
+        throw new Error("User ID is required");
+    }
+
+    const data = {};
+    if (full_name !== undefined) {
+        const normalizedFullName = typeof full_name === "string" ? full_name.trim() : null;
+        data.full_name = normalizedFullName || null;
+    }
+    if (avatar_url !== undefined) {
+        const normalizedAvatar = typeof avatar_url === "string" ? avatar_url.trim() : null;
+        data.avatar_url = normalizedAvatar || null;
+    }
+    if (bio !== undefined) {
+        const normalizedBio = typeof bio === "string" ? bio.trim() : null;
+        data.bio = normalizedBio || null;
+    }
+    if (phone !== undefined) {
+        const normalizedPhone = typeof phone === "string" ? phone.trim() : null;
+        data.phone = normalizedPhone || null;
+    }
+
+    if (Object.keys(data).length === 0) {
+        throw new Error("No profile fields provided");
+    }
+
     try {
         const result = await prisma.user.update({
             where: {
-                user_id: userdata.user_id
+                user_id
             },
-            data: {
-                username: userdata.username,
-                email: userdata.email,
-                password_hash: userdata.password_hash,
-                full_name: userdata.full_name,
-                avatar_url: userdata.avatar_url,
-                bio: userdata.bio
-            }
+            data,
+            select: privateUserSelect
         });
-        return result;
+        return {
+            ...result,
+            username: buildUsername(result)
+        };
     } catch (error) {
         throw new Error("Error updating user: " + error.message);
     }
+}
+
+async function updateMyProfileById(userId, payload) {
+    return updateUser({
+        user_id: userId,
+        ...payload
+    });
 }
 
 const createNewUser = async (username, email, hashed_password, full_name, avatar_url, bio) =>{
@@ -354,10 +397,7 @@ module.exports = {
     verifyLoginUser,
     deleteUserById,
     updateUser,
-    createNewUser,
-    verifyLoginUser,
-    deleteUserById,
-    updateUser,
+    updateMyProfileById,
     findUserByUid,
     findUserByEmail,
     linkUserWithFirebaseUid,

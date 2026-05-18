@@ -10,6 +10,7 @@ const {
     verifyLoginUser,
     deleteUserById,
     updateUser,
+    updateMyProfileById: updateMyProfileByIdService,
     findUserByUid,
     findUserByEmail,
     linkUserWithFirebaseUid,
@@ -42,6 +43,24 @@ class UserController{
             if(!data) return res.status(404).json({message: "User not found"});
             return res.status(200).json(data);
         } catch (error) {
+            return res.status(500).json({message: "Internal server error:" + error});
+        }
+    }
+
+    async updateMyProfile(req, res, next){
+        try {
+            const userId = req.user?.id;
+            if(!userId) return res.status(400).json({message: "User ID is required"});
+
+            await updateMyProfileByIdService(userId, req.body ?? {});
+            const data = await getUserProfileByIdService(userId, userId);
+            if(!data) return res.status(404).json({message: "User not found"});
+            return res.status(200).json(data);
+        } catch (error) {
+            const message = String(error?.message ?? "");
+            if (message.includes("No profile fields provided")) {
+                return res.status(400).json({message: "No profile fields provided"});
+            }
             return res.status(500).json({message: "Internal server error:" + error});
         }
     }

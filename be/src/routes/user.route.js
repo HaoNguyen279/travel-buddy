@@ -9,6 +9,8 @@ router.delete('/:id', (req, res, next) => UserController.deleteUserById(req, res
 
 router.get('/me/profile', authenticateAccessToken, UserController.getMyProfile);
 
+router.put('/me/profile', authenticateAccessToken, UserController.updateMyProfile);
+
 router.get('/me', authenticateAccessToken, UserController.getMe);
 
 router.get('/:id/profile', authenticateAccessTokenOptional, UserController.getUserProfile);

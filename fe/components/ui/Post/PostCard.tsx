@@ -7,6 +7,7 @@ export function PostCard({ post }: PostCardProps) {
   const shortUserId = post.user_id.slice(0, 8).toUpperCase();
   const displayName =
     post.author?.full_name ?? post.author?.username ?? `user · ${shortUserId}`;
+  const avatarUrl = post.author?.avatar_url;
   const postDate = post.createdAt ?? post.created_at;
   const parsedDate = postDate ? new Date(postDate) : null;
   const formattedDate =
@@ -21,9 +22,17 @@ export function PostCard({ post }: PostCardProps) {
         <Link
           href={`/user/${post.user_id}`}
           aria-label={`Xem trang cá nhân của ${displayName}`}
-          className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-medium"
+          className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-medium overflow-hidden"
         >
-          {displayName.slice(0, 1).toUpperCase()}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            displayName.slice(0, 1).toUpperCase()
+          )}
         </Link>
         <div>
           <p className="text-sm font-medium text-gray-800">{displayName}</p>

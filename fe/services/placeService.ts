@@ -6,6 +6,8 @@ export type PlaceSummary = {
   slug?: string | null;
   image_url?: string | null;
   description?: string | null;
+  city?: string | null;
+  country?: string | null;
 };
 
 export const getPlaceById = async (placeId: string) => {
@@ -25,5 +27,10 @@ export const getPlacesLimit = async (limit = 4) => {
   const res = await api.get("/place", {
     params: { limit },
   });
+  return Array.isArray(res.data) ? (res.data as PlaceSummary[]) : [];
+};
+
+export const getPlaces = async () => {
+  const res = await api.get("/place");
   return Array.isArray(res.data) ? (res.data as PlaceSummary[]) : [];
 };

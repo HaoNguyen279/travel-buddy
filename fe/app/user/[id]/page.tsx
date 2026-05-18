@@ -105,9 +105,17 @@ export default function UserProfilePage() {
             <div className="rounded-xl bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-sky-100 text-3xl font-bold text-sky-700">
-                    {(profile.full_name || profile.username).slice(0, 1).toUpperCase()}
-                  </div>
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.full_name || profile.username}
+                      className="h-24 w-24 rounded-full border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-sky-100 text-3xl font-bold text-sky-700">
+                      {(profile.full_name || profile.username).slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
                   <div>
                     <h1 className="text-2xl font-bold text-slate-900">
                       {profile.full_name || profile.username}
@@ -128,9 +136,12 @@ export default function UserProfilePage() {
                   >
                     {profile.is_following ? "Đang theo dõi" : "Theo dõi"}
                   </button>
-                  <button className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800">
+                  <Link
+                    href={`/chat?peerEmail=${encodeURIComponent(profile.email)}`}
+                    className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800"
+                  >
                     Nhắn tin
-                  </button>
+                  </Link>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-5 border-t border-slate-200 pt-3 text-sm">
@@ -169,11 +180,19 @@ export default function UserProfilePage() {
                           href={`/user/${friend.user_id}`}
                           className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-100"
                         >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-700">
-                            {(friend.full_name || friend.username)
-                              .slice(0, 1)
-                              .toUpperCase()}
-                          </div>
+                          {friend.avatar_url ? (
+                            <img
+                              src={friend.avatar_url}
+                              alt={friend.full_name || friend.username}
+                              className="h-9 w-9 rounded-full border border-slate-200 object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-700">
+                              {(friend.full_name || friend.username)
+                                .slice(0, 1)
+                                .toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <p className="text-sm font-medium text-slate-800">
                               {friend.full_name || friend.username}

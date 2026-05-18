@@ -5,6 +5,7 @@ export type UserProfile = {
   username: string;
   email: string;
   full_name: string | null;
+  phone?: string | null;
   avatar_url: string | null;
   bio: string | null;
   createdAt: string;
@@ -36,6 +37,13 @@ export type BasicUser = {
   email: string;
 };
 
+export type UpdateMyProfilePayload = {
+  full_name?: string | null;
+  phone?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+};
+
 export async function getMyProfile(): Promise<UserProfile> {
   const res = await api.get("/user/me/profile");
   return res.data;
@@ -43,6 +51,13 @@ export async function getMyProfile(): Promise<UserProfile> {
 
 export async function getUserProfile(userId: string): Promise<UserProfile> {
   const res = await api.get(`/user/${userId}/profile`);
+  return res.data;
+}
+
+export async function updateMyProfile(
+  payload: UpdateMyProfilePayload,
+): Promise<UserProfile> {
+  const res = await api.put("/user/me/profile", payload);
   return res.data;
 }
 

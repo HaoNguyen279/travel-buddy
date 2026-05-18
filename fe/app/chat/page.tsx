@@ -24,6 +24,7 @@ import {
 } from "@/features/chat/hooks/usePresence";
 import { useRoomTyping } from "@/features/chat/hooks/useRoomTyping";
 import {
+  getMyProfile,
   getFollowing,
   resolveUserIdByEmail,
 } from "@/services/userProfileService";
@@ -106,8 +107,8 @@ function getDisplayNameByUid(
 ) {
   if (!uid) return "Direct Chat";
   return (
-    profiles?.[uid]?.displayName ||
     allUsersMap.get(uid)?.displayName ||
+    profiles?.[uid]?.displayName ||
     "Direct Chat"
   );
 }
@@ -119,10 +120,10 @@ function getAvatarByUid(
 ) {
   if (!uid) return FALLBACK_AVATAR;
   return (
-    profiles?.[uid]?.avatarUrl ||
     allUsersMap.get(uid)?.avatarUrl ||
-    profiles?.[uid]?.displayName?.charAt(0).toUpperCase() ||
     allUsersMap.get(uid)?.displayName?.charAt(0).toUpperCase() ||
+    profiles?.[uid]?.avatarUrl ||
+    profiles?.[uid]?.displayName?.charAt(0).toUpperCase() ||
     FALLBACK_AVATAR
   );
 }
@@ -179,9 +180,19 @@ export default function ChatPage() {
   const [createError, setCreateError] = useState("");
   const [typingError, setTypingError] = useState("");
   const [chatAccessError, setChatAccessError] = useState("");
+  const [peerEmailFromQuery, setPeerEmailFromQuery] = useState("");
+  const [myBackendProfile, setMyBackendProfile] = useState<{
+    displayName: string;
+    avatarUrl: string;
+    email: string;
+  } | null>(null);
+  const [followingProfileByEmail, setFollowingProfileByEmail] = useState<
+    Record<string, { displayName: string; avatarUrl: string }>
+  >({});
 
   const messagesBottomRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handledPeerEmailRef = useRef<string | null>(null);
   const usersMap = useMemo(
     () => new Map(users.map((item) => [item.uid, item])),
     [users],
@@ -195,14 +206,18 @@ export default function ChatPage() {
       userRef,
       {
         uid: user.uid,
-        displayName: user.displayName || user.email || "Anonymous",
-        avatarUrl: user.photoURL || "",
-        email: user.email || "",
+        displayName:
+          myBackendProfile?.displayName ||
+          user.displayName ||
+          user.email ||
+          "Anonymous",
+        avatarUrl: myBackendProfile?.avatarUrl || user.photoURL || "",
+        email: myBackendProfile?.email || user.email || "",
         updatedAt: serverTimestamp(),
       },
       { merge: true },
     );
-  }, [user]);
+  }, [user, myBackendProfile]);
 
   useEffect(() => {
     if (!user?.email) {
@@ -218,15 +233,49 @@ export default function ChatPage() {
           if (isMounted) setAllowedUserEmails(new Set());
           return;
         }
+
+        const myProfileData = await getMyProfile();
+        if (isMounted && myProfileData) {
+          setMyBackendProfile({
+            displayName:
+              myProfileData.full_name?.trim() ||
+              myProfileData.username ||
+              user.displayName ||
+              user.email ||
+              "Anonymous",
+            avatarUrl: myProfileData.avatar_url || "",
+            email: myProfileData.email || user.email || "",
+          });
+        }
+
         const following = await getFollowing(currentUserId);
+        const followingProfiles: Record<
+          string,
+          { displayName: string; avatarUrl: string }
+        > = {};
+        (following.items || []).forEach((item) => {
+          const key = String(item.email || "").toLowerCase();
+          if (!key) return;
+          followingProfiles[key] = {
+            displayName:
+              item.full_name?.trim() || item.username || String(item.email || ""),
+            avatarUrl: item.avatar_url || "",
+          };
+        });
         const allowedEmails = new Set(
           (following.items || [])
             .map((item) => String(item.email || "").toLowerCase())
             .filter(Boolean),
         );
-        if (isMounted) setAllowedUserEmails(allowedEmails);
+        if (isMounted) {
+          setAllowedUserEmails(allowedEmails);
+          setFollowingProfileByEmail(followingProfiles);
+        }
       } catch {
-        if (isMounted) setAllowedUserEmails(new Set());
+        if (isMounted) {
+          setAllowedUserEmails(new Set());
+          setFollowingProfileByEmail({});
+        }
       }
     };
 
@@ -234,7 +283,7 @@ export default function ChatPage() {
     return () => {
       isMounted = false;
     };
-  }, [user?.email]);
+  }, [user?.email, user?.displayName]);
 
   useEffect(() => {
     if (!user) return;
@@ -247,14 +296,17 @@ export default function ChatPage() {
       const userList = snapshot.docs
         .map((docItem) => {
           const data = docItem.data();
+          const email = typeof data.email === "string" ? data.email : "";
+          const override = followingProfileByEmail[email.toLowerCase()];
           return {
             uid: docItem.id,
-            displayName:
-              typeof data.displayName === "string"
+            displayName: override?.displayName ||
+              (typeof data.displayName === "string"
                 ? data.displayName
-                : "Anonymous",
-            avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : "",
-            email: typeof data.email === "string" ? data.email : "",
+                : "Anonymous"),
+            avatarUrl: override?.avatarUrl ||
+              (typeof data.avatarUrl === "string" ? data.avatarUrl : ""),
+            email,
           } satisfies UserProfile;
         })
         .filter((item) => item.uid !== user.uid);
@@ -263,7 +315,7 @@ export default function ChatPage() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, followingProfileByEmail]);
 
   useEffect(() => {
     if (!user) return;
@@ -416,11 +468,15 @@ export default function ChatPage() {
     if (!user) return null;
     return {
       uid: user.uid,
-      displayName: user.displayName || user.email || "Anonymous",
-      avatarUrl: user.photoURL || "",
-      email: user.email || "",
+      displayName:
+        myBackendProfile?.displayName ||
+        user.displayName ||
+        user.email ||
+        "Anonymous",
+      avatarUrl: myBackendProfile?.avatarUrl || user.photoURL || "",
+      email: myBackendProfile?.email || user.email || "",
     } satisfies UserProfile;
-  }, [user]);
+  }, [user, myBackendProfile]);
 
   const typingActor = useMemo(() => {
     if (!user) return null;
@@ -505,6 +561,75 @@ export default function ChatPage() {
     setIsCreateModalOpen(true);
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const peerEmail = String(params.get("peerEmail") || "").toLowerCase();
+    setPeerEmailFromQuery(peerEmail);
+  }, []);
+
+  const ensureDirectRoom = async (peerProfile: UserProfile) => {
+    if (!user || !myProfile) return null;
+
+    const peerEmail = String(peerProfile.email || "").toLowerCase();
+    if (!allowedUserEmails.has(peerEmail)) {
+      setChatAccessError("Bạn chỉ có thể nhắn với người đang theo dõi.");
+      return null;
+    }
+
+    const participantIds = [user.uid, peerProfile.uid].sort();
+    const roomId = `direct_${participantIds.join("_")}`;
+    const roomRef = doc(db, "rooms", roomId);
+    const existingRoom = await getDoc(roomRef);
+    const participantProfiles: Record<string, UserProfile> = {
+      [user.uid]: myProfile,
+      [peerProfile.uid]: peerProfile,
+    };
+
+    if (!existingRoom.exists()) {
+      await setDoc(roomRef, {
+        type: "direct",
+        participants: participantIds,
+        participantProfiles,
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastMessage: "",
+        lastMessageAt: null,
+      });
+    } else {
+      await setDoc(
+        roomRef,
+        {
+          participants: participantIds,
+          participantProfiles,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+    }
+
+    return roomId;
+  };
+
+  useEffect(() => {
+    const peerEmail = peerEmailFromQuery;
+    if (!peerEmail || !user || !myProfile || users.length === 0) return;
+    if (handledPeerEmailRef.current === peerEmail) return;
+
+    const peerProfile = users.find(
+      (item) => String(item.email || "").toLowerCase() === peerEmail,
+    );
+    if (!peerProfile) return;
+
+    handledPeerEmailRef.current = peerEmail;
+    void ensureDirectRoom(peerProfile).then((roomId) => {
+      if (roomId) {
+        setActiveRoomId(roomId);
+      }
+    });
+  }, [peerEmailFromQuery, user, myProfile, users, allowedUserEmails]);
+
   const toggleUserSelection = (targetId: string) => {
     setSelectedUserIds((prev) => {
       if (createType === "direct") return [targetId];
@@ -530,48 +655,16 @@ export default function ChatPage() {
         return;
       }
 
-      const participantIds = [user.uid, peerId].sort();
-      const roomId = `direct_${participantIds.join("_")}`;
-      const roomRef = doc(db, "rooms", roomId);
-      const existingRoom = await getDoc(roomRef);
-
       const peerProfile = users.find((item) => item.uid === peerId);
       if (!peerProfile) {
         setCreateError("Không tìm thấy người dùng để tạo chat.");
         return;
       }
-      if (!allowedUserEmails.has(String(peerProfile.email || "").toLowerCase())) {
+
+      const roomId = await ensureDirectRoom(peerProfile);
+      if (!roomId) {
         setCreateError("Bạn chỉ có thể chat với người đang theo dõi.");
         return;
-      }
-      const participantProfiles: Record<string, UserProfile> = {
-        [user.uid]: myProfile,
-      };
-      if (peerProfile) {
-        participantProfiles[peerId] = peerProfile;
-      }
-
-      if (!existingRoom.exists()) {
-        await setDoc(roomRef, {
-          type: "direct",
-          participants: participantIds,
-          participantProfiles,
-          createdBy: user.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          lastMessage: "",
-          lastMessageAt: null,
-        });
-      } else {
-        await setDoc(
-          roomRef,
-          {
-            participants: participantIds,
-            participantProfiles,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        );
       }
 
       setActiveRoomId(roomId);
@@ -790,7 +883,12 @@ export default function ChatPage() {
                   >
                     {!isMe && (
                       <AvatarCircle
-                        value={msg.senderAvatar || msg.senderName}
+                        value={
+                          usersMap.get(msg.senderId)?.avatarUrl ||
+                          msg.senderAvatar ||
+                          usersMap.get(msg.senderId)?.displayName ||
+                          msg.senderName
+                        }
                         className="h-9 w-9 text-xs font-semibold"
                       />
                     )}
@@ -803,7 +901,7 @@ export default function ChatPage() {
                     >
                       {!isMe && (
                         <p className="mb-1 text-xs text-slate-500">
-                          {msg.senderName}
+                          {usersMap.get(msg.senderId)?.displayName || msg.senderName}
                         </p>
                       )}
                       <p>{msg.text}</p>
@@ -811,6 +909,8 @@ export default function ChatPage() {
                     {isMe && (
                       <AvatarCircle
                         value={
+                          myProfile?.avatarUrl ||
+                          myProfile?.displayName ||
                           user.photoURL ||
                           user.displayName ||
                           user.email ||
