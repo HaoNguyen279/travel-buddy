@@ -9,6 +9,7 @@ import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
 import TravelSearch from "@/components/ui/TravelSearch";
 import { getTours } from "@/services/tourService";
+import { getPlacesLimit, type PlaceSummary } from "@/services/placeService";
 
 
 type Tour = {
@@ -40,32 +41,8 @@ const getRatingText = (rating: number) => {
   return "Ổn";
 };
 
-const destinations = [
-  {
-    imgUrl: "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=1200&q=80",
-    altText: "Đà Nẵng cầu Rồng",
-    topicTitle: "Đà Nẵng",
-    destination: "da-nang",
-  },
-  {
-    imgUrl: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80",
-    altText: "Đà Lạt rừng thông",
-    topicTitle: "Đà Lạt",
-    destination: "da-lat",
-  },
-  {
-    imgUrl: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=1200&q=80",
-    altText: "Hội An về đêm",
-    topicTitle: "Hội An",
-    destination: "hoi-an",
-  },
-  {
-    imgUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
-    altText: "Nha Trang biển xanh",
-    topicTitle: "Nha Trang",
-    destination: "nha-trang",
-  },
-];
+const fallbackPlaceImage =
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800";
 
 const navProps = {
   webName: "TravelBuddy",
@@ -126,6 +103,7 @@ const dataFooter = [
 
 export default function Home() {
   const [tours, setTours] = useState<Tour[]>([]);
+  const [recommendedPlaces, setRecommendedPlaces] = useState<PlaceSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
@@ -133,13 +111,16 @@ export default function Home() {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchTours = async () => {
+    const fetchHomeData = async () => {
       try {
-        const data = await getTours();
+        const [tourData, placeData] = await Promise.all([getTours(), getPlacesLimit(4)]);
         if (isMounted) {
-          setTours(Array.isArray(data) ? data : []);
+          setTours(Array.isArray(tourData) ? tourData : []);
+          setRecommendedPlaces(
+            placeData.filter((place) => Boolean(place.place_id)).slice(0, 4)
+          );
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setError("Không tải được danh sách tour. Vui lòng thử lại sau.");
         }
@@ -151,7 +132,7 @@ export default function Home() {
       }
     };
 
-    fetchTours();
+    fetchHomeData();
 
     return () => {
       isMounted = false;
@@ -254,15 +235,18 @@ export default function Home() {
             description="Gợi ý dựa trên xu hướng tìm kiếm và đánh giá từ cộng đồng."
           />
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {destinations.map((item) => (
-              <RecommendCard
-                key={item.topicTitle}
-                imgUrl={item.imgUrl}
-                altText={item.altText}
-                topicTitle={item.topicTitle}
-                destination={item.destination}
-              />
-            ))}
+            {recommendedPlaces.map((item) => {
+              if (!item.place_id) return null;
+              return (
+                <RecommendCard
+                  key={item.place_id}
+                  imgUrl={item.image_url ?? fallbackPlaceImage}
+                  altText={item.name ?? "Điểm đến"}
+                  topicTitle={item.name ?? "Điểm đến"}
+                  destination={item.place_id}
+                />
+              );
+            })}
           </div>
         </section>
 

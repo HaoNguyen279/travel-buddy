@@ -10,6 +10,13 @@ export const getToursByPlaceSlug = async (slug: string) => {
   return res.data;
 };
 
+export const getToursByPlaceId = async (placeId: string) => {
+  const res = await api.get("/tour", {
+    params: { place_id: placeId },
+  });
+  return res.data;
+};
+
 export const getToursLimit = async (limit = 6) => {
   const res = await api.get("/tour", {
     params: { limit },

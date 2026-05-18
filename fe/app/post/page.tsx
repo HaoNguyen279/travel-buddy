@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Compass, MapPin, PenSquare } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Compass, MapPin, PenSquare, Search } from "lucide-react";
 import { Navbar } from "@/components/nav/Navbar";
 import Footer from "@/components/footer/Footer";
 import { getPosts, type Post } from "@/services/postService";
@@ -48,6 +48,8 @@ export default function PostPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchCriteria, setSearchCriteria] = useState<"all" | "content" | "author" | "placeName">("all");
 
   useEffect(() => {
     async function fetchData() {
@@ -63,6 +65,31 @@ export default function PostPage() {
 
     void fetchData();
   }, []);
+
+  const filteredPosts = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+    if (!keyword) return posts;
+
+    return posts.filter((post) => {
+      const displayName = (
+        post.author?.full_name ??
+        post.author?.username ??
+        ""
+      ).toLowerCase();
+      const content = String(post.content ?? "").toLowerCase();
+      const placeName = String(post.place?.name ?? "").toLowerCase();
+
+      if (searchCriteria === "content") return content.includes(keyword);
+      if (searchCriteria === "author") return displayName.includes(keyword);
+      if (searchCriteria === "placeName") return placeName.includes(keyword);
+
+      return (
+        content.includes(keyword) ||
+        displayName.includes(keyword) ||
+        placeName.includes(keyword)
+      );
+    });
+  }, [posts, searchCriteria, searchKeyword]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
@@ -82,6 +109,32 @@ export default function PostPage() {
               <p className="mt-1 text-sm text-slate-500">
                 Chia sẻ trải nghiệm thật từ những chuyến đi gần đây.
               </p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    placeholder="Tìm bài viết theo nội dung, tác giả, tên địa điểm..."
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  />
+                </div>
+                <select
+                  value={searchCriteria}
+                  onChange={(e) =>
+                    setSearchCriteria(
+                      e.target.value as "all" | "content" | "author" | "placeName",
+                    )
+                  }
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                >
+                  <option value="all">Tất cả tiêu chí</option>
+                  <option value="content">Nội dung bài viết</option>
+                  <option value="author">Tác giả</option>
+                  <option value="placeName">Tên địa điểm</option>
+                </select>
+              </div>
             </div>
             <button className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700">
               <PenSquare className="h-4 w-4" />
@@ -100,11 +153,13 @@ export default function PostPage() {
               <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
                 {error}
               </div>
-            ) : posts.length > 0 ? (
-              posts.map((item) => <PostCard key={item.post_id} post={item} />)
+            ) : filteredPosts.length > 0 ? (
+              filteredPosts.map((item) => <PostCard key={item.post_id} post={item} />)
             ) : (
               <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-500">
-                Chưa có bài viết nào.
+                {posts.length === 0
+                  ? "Chưa có bài viết nào."
+                  : "Không có bài viết phù hợp với bộ lọc."}
               </div>
             )}
           </section>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Post } from "@/services/postService";
 
 type PostCardProps = { post: Post };
@@ -17,9 +18,13 @@ export function PostCard({ post }: PostCardProps) {
     <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-medium">
+        <Link
+          href={`/user/${post.user_id}`}
+          aria-label={`Xem trang cá nhân của ${displayName}`}
+          className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-medium"
+        >
           {displayName.slice(0, 1).toUpperCase()}
-        </div>
+        </Link>
         <div>
           <p className="text-sm font-medium text-gray-800">{displayName}</p>
           <p className="text-xs text-gray-400">{formattedDate}</p>
@@ -61,15 +66,6 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       )}
 
-      {/* Footer badges */}
-      <div className="flex gap-2 flex-wrap">
-        <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-md">
-          place #{post.place_id}
-        </span>
-        <span className="text-xs bg-gray-100 text-gray-500 border border-gray-200 px-3 py-1 rounded-md">
-          {post.post_id.slice(0, 8)}
-        </span>
-      </div>
     </div>
   );
 }

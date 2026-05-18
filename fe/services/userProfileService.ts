@@ -19,6 +19,7 @@ export type UserProfile = {
 
 export type FollowListItem = {
   user_id: string;
+  email?: string | null;
   username: string;
   full_name: string | null;
   avatar_url: string | null;

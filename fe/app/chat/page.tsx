@@ -23,9 +23,12 @@ import {
   useUserPresence,
 } from "@/features/chat/hooks/usePresence";
 import { useRoomTyping } from "@/features/chat/hooks/useRoomTyping";
+import {
+  getFollowing,
+  resolveUserIdByEmail,
+} from "@/services/userProfileService";
 
 type ChatType = "direct" | "group";
-type ChatTab = "recent" | "messages";
 const TYPING_IDLE_DELAY_MS = 5000;
 
 type UserProfile = {
@@ -59,14 +62,14 @@ const FALLBACK_AVATAR = "👤";
 const URL_PATTERN = /^https?:\/\//i;
 const navProps = {
   webName: "TravelBuddy",
-  subtitle: "alo",
+  subtitle: "",
   itemOnNav: [
     {
-      itemName: "Post",
+      itemName: "Bài viết",
       linkTo: "/post",
     },
     {
-      itemName: "Place",
+      itemName: "Địa điểm",
       linkTo: "/place/da-nang",
     },
     {
@@ -161,9 +164,11 @@ export default function ChatPage() {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [allowedUserEmails, setAllowedUserEmails] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ChatTab>("recent");
   const [draftMessage, setDraftMessage] = useState("");
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -173,6 +178,7 @@ export default function ChatPage() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [createError, setCreateError] = useState("");
   const [typingError, setTypingError] = useState("");
+  const [chatAccessError, setChatAccessError] = useState("");
 
   const messagesBottomRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -197,6 +203,38 @@ export default function ChatPage() {
       { merge: true },
     );
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.email) {
+      setAllowedUserEmails(new Set());
+      return;
+    }
+
+    let isMounted = true;
+    const loadFollowingUsers = async () => {
+      try {
+        const currentUserId = await resolveUserIdByEmail(user.email || "");
+        if (!currentUserId) {
+          if (isMounted) setAllowedUserEmails(new Set());
+          return;
+        }
+        const following = await getFollowing(currentUserId);
+        const allowedEmails = new Set(
+          (following.items || [])
+            .map((item) => String(item.email || "").toLowerCase())
+            .filter(Boolean),
+        );
+        if (isMounted) setAllowedUserEmails(allowedEmails);
+      } catch {
+        if (isMounted) setAllowedUserEmails(new Set());
+      }
+    };
+
+    void loadFollowingUsers();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.email]);
 
   useEffect(() => {
     if (!user) return;
@@ -351,24 +389,28 @@ export default function ChatPage() {
 
   const peerPresence = useUserPresence(activeRoomIdentity.peerUid);
 
-  const visibleRooms = useMemo(() => {
-    if (activeTab === "recent") return [...rooms].sort(sortByLatestRooms);
-    return [...rooms].sort((a, b) => {
-      const aName = a.name || "";
-      const bName = b.name || "";
-      return aName.localeCompare(bName, "vi");
-    });
-  }, [rooms, activeTab]);
+  const visibleRooms = useMemo(
+    () => [...rooms].sort(sortByLatestRooms),
+    [rooms],
+  );
+
+  const eligibleUsers = useMemo(
+    () =>
+      users.filter((item) =>
+        allowedUserEmails.has(String(item.email || "").toLowerCase()),
+      ),
+    [users, allowedUserEmails],
+  );
 
   const filteredUsers = useMemo(() => {
     const term = userSearch.trim().toLowerCase();
-    if (!term) return users;
-    return users.filter((item) => {
+    if (!term) return eligibleUsers;
+    return eligibleUsers.filter((item) => {
       const byName = item.displayName.toLowerCase().includes(term);
       const byEmail = (item.email || "").toLowerCase().includes(term);
       return byName || byEmail;
     });
-  }, [users, userSearch]);
+  }, [eligibleUsers, userSearch]);
 
   const myProfile = useMemo(() => {
     if (!user) return null;
@@ -393,6 +435,19 @@ export default function ChatPage() {
 
   const { typingUsers, setTyping } = useRoomTyping(activeRoomId, typingActor);
 
+  const canChatInActiveRoom = useMemo(() => {
+    if (!activeRoom || !user) return false;
+    if (activeRoom.type === "group") return true;
+
+    const peerId = activeRoom.participants.find((id) => id !== user.uid);
+    if (!peerId) return false;
+    const peerEmail =
+      activeRoom.participantProfiles?.[peerId]?.email ||
+      usersMap.get(peerId)?.email ||
+      "";
+    return allowedUserEmails.has(String(peerEmail).toLowerCase());
+  }, [activeRoom, user, usersMap, allowedUserEmails]);
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -408,6 +463,10 @@ export default function ChatPage() {
       console.error("Failed to reset typing state on room change", error);
     });
   }, [activeRoomId, setTyping]);
+
+  useEffect(() => {
+    setChatAccessError("");
+  }, [activeRoomId]);
 
   const handleDraftChange = (value: string) => {
     setDraftMessage(value);
@@ -477,6 +536,14 @@ export default function ChatPage() {
       const existingRoom = await getDoc(roomRef);
 
       const peerProfile = users.find((item) => item.uid === peerId);
+      if (!peerProfile) {
+        setCreateError("Không tìm thấy người dùng để tạo chat.");
+        return;
+      }
+      if (!allowedUserEmails.has(String(peerProfile.email || "").toLowerCase())) {
+        setCreateError("Bạn chỉ có thể chat với người đang theo dõi.");
+        return;
+      }
       const participantProfiles: Record<string, UserProfile> = {
         [user.uid]: myProfile,
       };
@@ -546,6 +613,10 @@ export default function ChatPage() {
 
   const sendMessage = async () => {
     if (!activeRoomId || !user || !myProfile) return;
+    if (!canChatInActiveRoom) {
+      setChatAccessError("Bạn chỉ có thể nhắn với người đang theo dõi.");
+      return;
+    }
 
     const content = draftMessage.trim();
     if (!content) return;
@@ -585,14 +656,15 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-white to-amber-50">
       <Navbar
         webName={navProps.webName}
         subtitle={navProps.subtitle}
         itemOnNav={navProps.itemOnNav}
       />
-      <section className="mx-auto flex h-[75vh] min-h-[620px] w-full max-w-[1400px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <aside className="flex w-[360px] flex-col border-r border-slate-200 bg-slate-50/70 p-6">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <section className="flex h-[75vh] min-h-[620px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <aside className="flex w-[360px] flex-col border-r border-slate-200 bg-slate-50 p-6">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-4xl font-semibold text-slate-900">Chats</h1>
             <button
@@ -604,29 +676,8 @@ export default function ChatPage() {
             </button>
           </div>
 
-          <div className="mb-4 flex items-center gap-4 text-3xl">
-            <button
-              type="button"
-              onClick={() => setActiveTab("recent")}
-              className={
-                activeTab === "recent"
-                  ? "text-blue-500 underline"
-                  : "text-slate-500 hover:text-slate-700"
-              }
-            >
-              Recent Chats
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("messages")}
-              className={
-                activeTab === "messages"
-                  ? "text-blue-500 underline"
-                  : "text-slate-500 hover:text-slate-700"
-              }
-            >
-              Messages
-            </button>
+          <div className="mb-4 text-2xl font-semibold text-blue-600">
+            Recent Chats
           </div>
 
           <div className="space-y-4 overflow-y-auto pr-1">
@@ -795,22 +846,31 @@ export default function ChatPage() {
                 onChange={(event) => handleDraftChange(event.target.value)}
                 placeholder="Nhập tin nhắn..."
                 className="h-12 flex-1 rounded-xl border border-slate-300 px-4 text-slate-900 outline-none focus:border-blue-500"
-                disabled={!activeRoomId}
+                disabled={!activeRoomId || !canChatInActiveRoom}
               />
               <button
                 type="submit"
                 className="h-12 rounded-xl bg-blue-500 px-6 font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-                disabled={!activeRoomId || !draftMessage.trim()}
+                disabled={!activeRoomId || !draftMessage.trim() || !canChatInActiveRoom}
               >
                 Gửi
               </button>
             </form>
+            {!canChatInActiveRoom && activeRoomId && (
+              <p className="mt-2 text-xs text-rose-500">
+                Bạn chỉ có thể nhắn tin với người đang theo dõi.
+              </p>
+            )}
+            {chatAccessError && (
+              <p className="mt-2 text-xs text-rose-500">{chatAccessError}</p>
+            )}
             {typingError && (
               <p className="mt-2 text-xs text-rose-500">{typingError}</p>
             )}
           </div>
         </div>
       </section>
+      </div>
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
@@ -873,7 +933,7 @@ export default function ChatPage() {
             <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3">
               {filteredUsers.length === 0 ? (
                 <p className="text-sm text-slate-500">
-                  Không tìm thấy người dùng phù hợp.
+                  Bạn chưa theo dõi ai để bắt đầu chat.
                 </p>
               ) : (
                 filteredUsers.map((item) => {

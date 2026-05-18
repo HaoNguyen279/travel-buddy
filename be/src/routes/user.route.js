@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/UserController');
-const { authenticateAccessToken } = require('../middlewares/authenticate');
+const { authenticateAccessToken, authenticateAccessTokenOptional } = require('../middlewares/authenticate');
 
 router.put('/:id', (req, res, next) => UserController.updateUser(req, res, next));
 
@@ -11,7 +11,7 @@ router.get('/me/profile', authenticateAccessToken, UserController.getMyProfile);
 
 router.get('/me', authenticateAccessToken, UserController.getMe);
 
-router.get('/:id/profile', UserController.getUserProfile);
+router.get('/:id/profile', authenticateAccessTokenOptional, UserController.getUserProfile);
 
 router.post('/:id/follow', authenticateAccessToken, UserController.followUser);
 

@@ -15,6 +15,9 @@ export type Post = {
   createdAt?: string;
   created_at?: string;
   author?: PostAuthor;
+  place?: {
+    name?: string | null;
+  } | null;
 };
 
 export const getPosts = async (userId?: string): Promise<Post[]> => {

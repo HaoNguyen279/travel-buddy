@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { Navbar } from "@/components/nav/Navbar";
@@ -25,7 +25,7 @@ const navProps = {
   ],
 };
 
-export default function MyProfilePage() {
+function MyProfileContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -41,6 +41,7 @@ export default function MyProfilePage() {
         if (!targetId && user?.email) {
           targetId = await resolveUserIdByEmail(user.email);
         }
+
         if (!targetId) {
           setError("Không xác định được hồ sơ của bạn.");
           return;
@@ -57,6 +58,7 @@ export default function MyProfilePage() {
       } catch {
         setError("Không thể tải trang hồ sơ.");
       }
+
     }
 
     void loadData();
@@ -177,5 +179,13 @@ export default function MyProfilePage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function MyProfilePage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-slate-100" />}>
+      <MyProfileContent />
+    </Suspense>
   );
 }

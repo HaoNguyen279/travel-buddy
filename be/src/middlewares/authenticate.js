@@ -2,8 +2,21 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 
+function getAccessTokenFromRequest(req) {
+    if (req.cookies?.accessToken) {
+        return req.cookies.accessToken;
+    }
+
+    const authHeader = req.headers?.authorization;
+    if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+        return authHeader.slice(7).trim();
+    }
+
+    return null;
+}
+
 function authenticateAccessToken(req, res, next) {
-    const token = req.cookies.accessToken;
+    const token = getAccessTokenFromRequest(req);
 
     if (!token) {
         console.log("Không tìm thấy access token trong cookies.");
@@ -24,6 +37,20 @@ function authenticateAccessToken(req, res, next) {
     });
 }
 
+function authenticateAccessTokenOptional(req, res, next) {
+    const token = getAccessTokenFromRequest(req);
+    if (!token) {
+        return next();
+    }
+
+    jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, user) => {
+        if (!err) {
+            req.user = user;
+        }
+        return next();
+    });
+}
+
 function refreshToken()
 {
 
@@ -31,4 +58,4 @@ function refreshToken()
 
 }
 
-module.exports = { authenticateAccessToken }
+module.exports = { authenticateAccessToken, authenticateAccessTokenOptional }

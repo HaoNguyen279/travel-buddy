@@ -23,6 +23,11 @@ const postInclude = {
             full_name: true,
             avatar_url: true
         }
+    },
+    place: {
+        select: {
+            name: true
+        }
     }
 };
 

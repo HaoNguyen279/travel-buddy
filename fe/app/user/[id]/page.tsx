@@ -76,6 +76,9 @@ export default function UserProfilePage() {
           });
         }
       }
+      setError(null);
+    } catch {
+      setError("Không thể cập nhật theo dõi lúc này. Vui lòng đăng nhập lại.");
     } finally {
       setFollowSubmitting(false);
     }

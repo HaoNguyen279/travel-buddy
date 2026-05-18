@@ -5,17 +5,12 @@ import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import { SectionHeading } from "@/components/section/SectionHeading";
 import { ItemCard } from "@/components/ui/ItemCard";
-import { getToursByPlaceSlug } from "@/services/tourService";
+import { getPlaceById, getPlaceBySlug, type PlaceSummary } from "@/services/placeService";
+import { getToursByPlaceId, getToursByPlaceSlug } from "@/services/tourService";
 import React, { useEffect, useMemo, useState } from "react";
 
 type Props = {
   params: Promise<{ id: string }>;
-};
-
-type PlaceSummary = {
-  name?: string | null;
-  image_url?: string | null;
-  description?: string | null;
 };
 
 type Tour = {
@@ -104,10 +99,11 @@ const getRatingText = (rating: number) => {
 export default function Place({ params }: Props) {
   const { id } = React.use(params);
   const [tours, setTours] = useState<Tour[]>([]);
+  const [resolvedPlace, setResolvedPlace] = useState<PlaceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const placeInfo = useMemo(() => tours[0]?.place ?? null, [tours]);
+  const placeInfo = useMemo(() => resolvedPlace ?? tours[0]?.place ?? null, [resolvedPlace, tours]);
 
   const placeTitle = useMemo(() => {
     const name = placeInfo?.name;
@@ -123,12 +119,48 @@ export default function Place({ params }: Props) {
 
     const fetchTours = async () => {
       try {
-        const data = await getToursByPlaceSlug(id);
+        setIsLoading(true);
+        setError(null);
+
+        const bySlug = await getToursByPlaceSlug(id);
+        const toursFromSlug = Array.isArray(bySlug) ? bySlug : [];
+
+        if (isMounted && toursFromSlug.length > 0) {
+          setTours(toursFromSlug);
+          setResolvedPlace(toursFromSlug[0]?.place ?? null);
+          return;
+        }
+
+        const byPlaceId = await getToursByPlaceId(id);
+        const toursFromPlaceId = Array.isArray(byPlaceId) ? byPlaceId : [];
+
+        if (isMounted && toursFromPlaceId.length > 0) {
+          setTours(toursFromPlaceId);
+          setResolvedPlace(toursFromPlaceId[0]?.place ?? null);
+          return;
+        }
+
+        let place: PlaceSummary | null = null;
+        try {
+          place = await getPlaceBySlug(id);
+        } catch {
+          place = null;
+        }
+
+        if (!place) {
+          try {
+            place = await getPlaceById(id);
+          } catch {
+            place = null;
+          }
+        }
+
         if (isMounted) {
-          setTours(Array.isArray(data) ? data : []);
+          setTours([]);
+          setResolvedPlace(place);
           setError(null);
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setError("Không tải được danh sách tour. Vui lòng thử lại sau.");
         }

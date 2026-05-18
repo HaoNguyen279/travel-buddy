@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { searchAll, SearchItem } from "@/services/searchService";
 import { getToursLimit } from "@/services/tourService";
 
+type TourSearchItem = Extract<SearchItem, { type: "tour" }>;
+
 const TravelSearch = () => {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchItem[]>([]);
-  const [suggestedTours, setSuggestedTours] = useState<SearchItem[]>([]);
+  const [suggestedTours, setSuggestedTours] = useState<TourSearchItem[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,8 +84,8 @@ const TravelSearch = () => {
 
       try {
         const data = await getToursLimit(8);
-        const items = Array.isArray(data)
-          ? data.map((tour) => ({
+        const items: TourSearchItem[] = Array.isArray(data)
+          ? data.map((tour): TourSearchItem => ({
               type: "tour",
               tour_id: tour.tour_id,
               name: tour.name,
@@ -282,7 +284,7 @@ const TravelSearch = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     {suggestedTours.map((item) => (
                       <button
-                        key={item.type === "tour" ? item.tour_id : `place-${item.place_id}`}
+                        key={`tour-${item.tour_id}`}
                         type="button"
                         onClick={() => handleResultClick(item)}
                         className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2 text-left transition hover:border-gray-200 hover:bg-gray-50"

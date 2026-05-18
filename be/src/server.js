@@ -15,8 +15,9 @@ app.use(cors({
   credentials: true
 }));
 
-// lấy db từ file config pool connection 
-const db = require('../src/config/postgre');
+// lấy db từ file config pool connection
+// const db = require('../src/config/postgre');
+const db = require('../src/config/supabasepg');
 app.use(express.json()); // parse JSON khi get data từ BODY của POST request
 
 app.use(cookieParser());
