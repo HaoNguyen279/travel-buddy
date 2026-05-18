@@ -84,8 +84,8 @@ const TravelSearch = () => {
 
       try {
         const data = await getToursLimit(8);
-        const items = Array.isArray(data)
-          ? data.map((tour) : SearchItem => ({
+        const items: TourSearchItem[] = Array.isArray(data)
+          ? data.map((tour) => ({
               type: "tour",
               tour_id: String(tour.tour_id),
               name: tour.name,
