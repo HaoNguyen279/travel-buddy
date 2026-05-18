@@ -11,7 +11,7 @@ const tourRouter = require('./routes/tour.route');
 const searchRouter = require('./routes/search.route');
 // CORS policy
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', "https://travel-buddy-super-pro.netlify.app"],
   credentials: true
 }));
 
