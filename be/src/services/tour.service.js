@@ -417,7 +417,7 @@ module.exports = {
     getTourById,
     createNewTour,
     updateTour,
-  deleteTour,
+    deleteTour,
     createOrUpdateTourRating,
     getTourFormData
 }

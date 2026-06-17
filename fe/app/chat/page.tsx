@@ -28,6 +28,7 @@ import {
   getFollowing,
   resolveUserIdByEmail,
 } from "@/services/userProfileService";
+import { navProps } from "@/constants/navigation";
 
 type ChatType = "direct" | "group";
 const TYPING_IDLE_DELAY_MS = 5000;
@@ -61,24 +62,6 @@ type ChatMessage = {
 
 const FALLBACK_AVATAR = "👤";
 const URL_PATTERN = /^https?:\/\//i;
-const navProps = {
-  webName: "TravelBuddy",
-  subtitle: "",
-  itemOnNav: [
-    {
-      itemName: "Bài viết",
-      linkTo: "/post",
-    },
-    {
-      itemName: "Địa điểm",
-      linkTo: "/place",
-    },
-    {
-      itemName: "Chat",
-      linkTo: "/chat",
-    },
-  ],
-};
 
 function sortByLatestRooms(a: ChatRoom, b: ChatRoom) {
   const aTs = a.lastMessageAt?.toMillis() ?? 0;

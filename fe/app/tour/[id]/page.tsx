@@ -6,6 +6,7 @@ import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import api from "@/services/api";
 import { useAuth } from "@/app/context/AuthContext";
+import { navProps, dataFooter } from "@/constants/navigation";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -72,70 +73,7 @@ type Tour = {
   } | null;
 };
 
-const navProps = {
-  webName: "TravelBuddy",
-  subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
-  itemOnNav: [
-    {
-      itemName: "Bài đăng",
-      linkTo: "/post",
-    },
-    {
-      itemName: "Địa điểm",
-      linkTo: "/place",
-    },
-    {
-      itemName: "Chat",
-      linkTo: "/chat",
-    },
-  ],
-};
 
-const dataFooter = [
-  {
-    footerTitle: "Support",
-    footerItems: [
-      { itemName: "Manage your trips", linkTo: "#" },
-      { itemName: "Contact Customer Service", linkTo: "#" },
-      { itemName: "Safety Resource Center", linkTo: "#" },
-    ],
-  },
-  {
-    footerTitle: "Discover",
-    footerItems: [
-      { itemName: "Seasonal and holiday deals", linkTo: "#" },
-      { itemName: "Travel articles", linkTo: "#" },
-      { itemName: "Booking.com for Business", linkTo: "#" },
-      { itemName: "Traveller Review Awards", linkTo: "#" },
-    ],
-  },
-  {
-    footerTitle: "Terms and settings",
-    footerItems: [
-      { itemName: "Privacy Notice", linkTo: "#" },
-      { itemName: "Terms of Service", linkTo: "#" },
-      { itemName: "Accessibility Statement", linkTo: "#" },
-      { itemName: "Content guidelines and reporting", linkTo: "#" },
-    ],
-  },
-  {
-    footerTitle: "Partners",
-    footerItems: [
-      { itemName: "Extranet login", linkTo: "#" },
-      { itemName: "List your property", linkTo: "#" },
-      { itemName: "Become an affiliate", linkTo: "#" },
-    ],
-  },
-  {
-    footerTitle: "About",
-    footerItems: [
-      { itemName: "About TravelBuddy", linkTo: "#" },
-      { itemName: "How We Work", linkTo: "#" },
-      { itemName: "Sustainability", linkTo: "#" },
-      { itemName: "Careers", linkTo: "#" },
-    ],
-  },
-];
 
 
 export default function TourDetailPage({ params }: Props) {

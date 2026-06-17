@@ -14,16 +14,7 @@ import {
   type FollowListItem,
   type UserProfile,
 } from "@/services/userProfileService";
-
-const navProps = {
-  webName: "TravelBuddy",
-  subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
-  itemOnNav: [
-    { itemName: "Post", linkTo: "/post" },
-    { itemName: "Place", linkTo: "/place/da-nang" },
-    { itemName: "Chat", linkTo: "/chat" },
-  ],
-};
+import { navProps } from "@/constants/navigation";
 
 export default function UserProfilePage() {
   const params = useParams<{ id: string }>();

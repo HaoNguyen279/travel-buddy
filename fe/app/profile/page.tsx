@@ -18,16 +18,7 @@ import {
   type FollowListItem,
   type UserProfile,
 } from "@/services/userProfileService";
-
-const navProps = {
-  webName: "TravelBuddy",
-  subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
-  itemOnNav: [
-    { itemName: "Bài viết", linkTo: "/post" },
-    { itemName: "Địa điểm", linkTo: "/place" },
-    { itemName: "Chat", linkTo: "/chat" },
-  ],
-};
+import { navProps } from "@/constants/navigation";
 
 function MyProfileContent() {
   const searchParams = useSearchParams();

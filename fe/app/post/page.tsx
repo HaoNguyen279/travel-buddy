@@ -17,43 +17,7 @@ import {
 } from "@/services/userProfileService";
 import { PostCard } from "@/components/ui/Post/PostCard";
 import { useAuth } from "@/app/context/AuthContext";
-
-const navProps = {
-  webName: "TravelBuddy",
-  subtitle: "Đặt chỗ, khám phá và lên kế hoạch cho chuyến đi của bạn",
-  itemOnNav: [
-    { itemName: "Bài viết", linkTo: "/post" },
-    { itemName: "Địa điểm", linkTo: "/place" },
-    { itemName: "Chat", linkTo: "/chat" },
-  ],
-};
-
-const dataFooter = [
-  {
-    footerTitle: "Community",
-    footerItems: [
-      { itemName: "Quy tắc cộng đồng", linkTo: "#" },
-      { itemName: "Mẹo chia sẻ bài viết", linkTo: "#" },
-      { itemName: "Trung tâm hỗ trợ", linkTo: "#" },
-    ],
-  },
-  {
-    footerTitle: "Khám phá",
-    footerItems: [
-      { itemName: "Điểm đến thịnh hành", linkTo: "#" },
-      { itemName: "Gợi ý lịch trình", linkTo: "#" },
-      { itemName: "Top review mới", linkTo: "#" },
-    ],
-  },
-  {
-    footerTitle: "TravelBuddy",
-    footerItems: [
-      { itemName: "Điều khoản", linkTo: "#" },
-      { itemName: "Chính sách riêng tư", linkTo: "#" },
-      { itemName: "Liên hệ", linkTo: "#" },
-    ],
-  },
-];
+import { navProps, dataFooter } from "@/constants/navigation";
 
 export default function PostPage() {
   const { user } = useAuth();

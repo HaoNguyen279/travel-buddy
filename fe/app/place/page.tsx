@@ -6,62 +6,7 @@ import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/nav/Navbar";
 import { SectionHeading } from "@/components/section/SectionHeading";
 import { getPlacesWithTours, type PlaceWithTours } from "@/services/placeService";
-
-const navProps = {
-	webName: "TravelBuddy",
-	subtitle: "",
-	itemOnNav: [
-		{ itemName: "Bài viết", linkTo: "/post" },
-		{ itemName: "Địa điểm", linkTo: "/place" },
-		{ itemName: "Chat", linkTo: "/chat" },
-	],
-};
-
-const dataFooter = [
-	{
-		footerTitle: "Hỗ trợ",
-		footerItems: [
-			{ itemName: "Quản lý chuyến đi", linkTo: "#" },
-			{ itemName: "Liên hệ hỗ trợ", linkTo: "#" },
-			{ itemName: "Trung tâm an toàn", linkTo: "#" },
-		],
-	},
-	{
-		footerTitle: "Khám phá",
-		footerItems: [
-			{ itemName: "Chương trình ưu đãi", linkTo: "#" },
-			{ itemName: "Deals theo mùa", linkTo: "#" },
-			{ itemName: "Bài viết du lịch", linkTo: "#" },
-			{ itemName: "Thuê xe", linkTo: "#" },
-			{ itemName: "Tìm chuyến bay", linkTo: "#" },
-		],
-	},
-	{
-		footerTitle: "Điều khoản",
-		footerItems: [
-			{ itemName: "Chính sách bảo mật", linkTo: "#" },
-			{ itemName: "Điều khoản dịch vụ", linkTo: "#" },
-			{ itemName: "Quy định sử dụng", linkTo: "#" },
-		],
-	},
-	{
-		footerTitle: "Đối tác",
-		footerItems: [
-			{ itemName: "Đăng ký đối tác", linkTo: "#" },
-			{ itemName: "Hỗ trợ đối tác", linkTo: "#" },
-			{ itemName: "Đăng ký chỗ nghỉ", linkTo: "#" },
-		],
-	},
-	{
-		footerTitle: "Về chúng tôi",
-		footerItems: [
-			{ itemName: "Giới thiệu", linkTo: "#" },
-			{ itemName: "Cách hoạt động", linkTo: "#" },
-			{ itemName: "Tin tức", linkTo: "#" },
-			{ itemName: "Tuyển dụng", linkTo: "#" },
-		],
-	},
-];
+import { navProps, dataFooter } from "@/constants/navigation";
 
 const formatCurrency = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
@@ -110,7 +55,7 @@ export default function PlacePage() {
 				<section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-amber-50 p-6 sm:p-8">
 					<div className="max-w-2xl space-y-3">
 						<p className="text-xs font-semibold uppercase tracking-widest text-blue-500">
-							Places
+							Địa điểm
 						</p>
 						<h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
 							Điểm đến nổi bật
